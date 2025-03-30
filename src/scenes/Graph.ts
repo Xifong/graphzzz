@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 interface GraphEdge {
     id: number;
     leftNode: GraphNode;
@@ -18,6 +20,7 @@ interface Graph {
     deleteIfExistsNode: (id: number) => void;
     deleteIfExistsEdge: (id: number) => void;
 
+    serialise: () => string;
 }
 
 class GraphManipulationError extends Error { }
@@ -57,11 +60,10 @@ class GraphImp implements Graph {
             leftNode: leftNode,
             rightNode: rightNode,
         }
+        this.edges.set(id, newEdge);
 
         this.upsertNode(leftNodeID, [id]);
         this.upsertNode(rightNodeID, [id]);
-
-        this.edges.set(id, newEdge);
 
         return newEdge;
     }
@@ -98,6 +100,72 @@ class GraphImp implements Graph {
         }
 
         this.edges.delete(id);
+    }
+
+    serialise(): string {
+        const nodes = [...this.nodes.values()].map((node) => ({
+            id: node.id
+        }));
+
+        const edges = [...this.edges.values()].map((edge) => ({
+            id: edge.id,
+            leftNodeID: edge.leftNode.id,
+            rightNodeID: edge.rightNode.id,
+        }));
+
+        return JSON.stringify({
+            nodes: nodes,
+            edges: edges
+        });
+    }
+}
+
+interface GraphDeserialiser {
+    deserialise: (graphRepresentation: string) => Graph;
+}
+
+class GraphDeserialisationError extends Error { }
+
+const graphSchema = z.object({
+    nodes: z.array(z.object({
+        id: z.number().int(),
+    })),
+    edges: z.array(z.object({
+        id: z.number().int(),
+        leftNodeID: z.number().int(),
+        rightNodeID: z.number().int(),
+    })),
+})
+type GraphSchema = z.infer<typeof graphSchema>;
+
+class GraphDeserialiserImp implements GraphDeserialiser {
+    createGraph(graphSchema: GraphSchema): Graph {
+        const graph = new GraphImp();
+        for (const edge of graphSchema.edges) {
+            graph.upsertEdge(edge.id, edge.leftNodeID, edge.rightNodeID);
+        }
+        for (const node of graphSchema.nodes) {
+            graph.upsertNode(node.id);
+        }
+        return graph;
+    }
+
+    deserialise(graphData: string): Graph {
+        let graphDataObject: unknown;
+        try {
+            graphDataObject = JSON.parse(graphData);
+        }
+        catch (error: unknown) {
+            throw new GraphDeserialisationError(`failed to parse graph data: ${error}`)
+        }
+
+        const result = graphSchema.safeParse(graphDataObject);
+
+        if (!result.success) {
+            throw new GraphDeserialisationError(`failed to validate graph data: ${result.error.format()}`)
+        }
+
+        return this.createGraph(result.data);
     }
 }
 

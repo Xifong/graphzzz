@@ -11,6 +11,9 @@ importers:
       phaser:
         specifier: ^3.88.2
         version: 3.88.2
+      zod:
+        specifier: ^3.24.2
+        version: 3.24.2
     devDependencies:
       terser:
         specifier: ^5.31.0
@@ -382,6 +385,9 @@ packages:
       terser:
         optional: true
 
+  zod@3.24.2:
+    resolution: {integrity: sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==}
+
 snapshots:
 
   '@esbuild/aix-ppc64@0.21.5':
@@ -640,3 +646,5 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
       terser: 5.39.0
+
+  zod@3.24.2: {}
