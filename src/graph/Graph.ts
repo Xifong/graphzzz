@@ -1,5 +1,4 @@
 import { Graph, GraphNode, GraphEdge } from './types';
-import { z } from "zod";
 
 class GraphManipulationError extends Error { }
 
@@ -97,53 +96,3 @@ export class GraphImp implements Graph {
         });
     }
 }
-
-interface GraphDeserialiser {
-    deserialise: (graphRepresentation: string) => Graph;
-}
-
-class GraphDeserialisationError extends Error { }
-
-const graphSchema = z.object({
-    nodes: z.array(z.object({
-        id: z.number().int(),
-    })),
-    edges: z.array(z.object({
-        id: z.number().int(),
-        leftNodeID: z.number().int(),
-        rightNodeID: z.number().int(),
-    })),
-})
-type GraphSchema = z.infer<typeof graphSchema>;
-
-class GraphDeserialiserImp implements GraphDeserialiser {
-    createGraph(graphSchema: GraphSchema): Graph {
-        const graph = new GraphImp();
-        for (const edge of graphSchema.edges) {
-            graph.upsertEdge(edge.id, edge.leftNodeID, edge.rightNodeID);
-        }
-        for (const node of graphSchema.nodes) {
-            graph.upsertNode(node.id);
-        }
-        return graph;
-    }
-
-    deserialise(graphData: string): Graph {
-        let graphDataObject: unknown;
-        try {
-            graphDataObject = JSON.parse(graphData);
-        }
-        catch (error: unknown) {
-            throw new GraphDeserialisationError(`failed to parse graph data: ${error}`)
-        }
-
-        const result = graphSchema.safeParse(graphDataObject);
-
-        if (!result.success) {
-            throw new GraphDeserialisationError(`failed to validate graph data: ${result.error.format()}`)
-        }
-
-        return this.createGraph(result.data);
-    }
-}
-

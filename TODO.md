@@ -1,0 +1,2 @@
+- enumerate edges and nodes on Graph (removing the [...this.nodes.values()].map pattern)
+- deserialise InteractiveGraph, not just Graph

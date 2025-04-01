@@ -1,5 +1,5 @@
 import { Scene } from 'phaser';
-import { GraphRenderData } from './types';
+import { GraphRenderData } from '../graph/types';
 
 interface PhaserPosition {
     x: number

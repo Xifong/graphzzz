@@ -1,3 +1,12 @@
+export interface InteractiveGraph {
+    getRenderData: () => GraphRenderData;
+}
+
+
+export interface InteractiveGraphDeserialiser {
+    deserialise: (graphRepresentation: string) => InteractiveGraph;
+}
+
 export interface GraphEdge {
     id: number;
     leftNode: GraphNode;

@@ -1,82 +1,71 @@
-import { GraphRenderData } from './types';
+import { GraphRenderData, Graph, InteractiveGraph, InteractiveGraphDeserialiser } from './types';
 import { GraphImp } from '../graph/Graph';
+import { z } from "zod";
 
-export class InteractiveGraph {
+type NodePositions = {
+    id: number,
+    x: number,
+    y: number
+}[];
 
+export class InteractiveGraphImp implements InteractiveGraph {
+    graph: Graph;
+    positions: NodePositions;
+
+    constructor(graph: Graph, positions: NodePositions) {
+        this.graph = graph;
+        this.positions = positions;
+    }
+
+    getRenderData(): GraphRenderData {
+        return {
+            nodes: this.positions,
+            edges: [...this.graph.edges.values()].map(
+                (edge) => ({ leftNodeID: edge.leftNode.id, rightNodeID: edge.rightNode.id })
+            ),
+        }
+    }
 }
 
-const nodes = [
-    {
-        id: 0,
-        x: 100,
-        y: 50
-    },
-    {
-        id: 1,
-        x: 20,
-        y: 20
-    },
-    {
-        id: 2,
-        x: 500,
-        y: 500
-    },
-    {
-        id: 3,
-        x: 600,
-        y: 100
-    },
-    {
-        id: 4,
-        x: 800,
-        y: 850
-    },
-];
+class GraphDeserialisationError extends Error { }
 
-const edges = [
-    {
-        id: 0,
-        leftNode: 0,
-        rightNode: 1,
-    },
-    {
-        id: 1,
-        leftNode: 0,
-        rightNode: 2,
-    },
-    {
-        id: 2,
-        leftNode: 0,
-        rightNode: 3,
-    },
-    {
-        id: 3,
-        leftNode: 3,
-        rightNode: 4,
-    },
-    {
-        id: 4,
-        leftNode: 2,
-        rightNode: 3,
-    },
-    {
-        id: 5,
-        leftNode: 4,
-        rightNode: 2,
-    },
-]
+const graphDataSchema = z.object({
+    nodes: z.array(z.object({
+        id: z.number().int().nonnegative(),
+        x: z.number().nonnegative().lte(1000),
+        y: z.number().nonnegative().lte(1000),
+    })),
+    edges: z.array(z.object({
+        id: z.number().int().nonnegative(),
+        leftNodeID: z.number().int().nonnegative(),
+        rightNodeID: z.number().int().nonnegative(),
+    })),
+})
+type GraphDataSchema = z.infer<typeof graphDataSchema>;
 
-const graph = new GraphImp();
+export class GraphDataDeserialiserImp implements InteractiveGraphDeserialiser {
+    createGraph(graphSchema: GraphDataSchema): Graph {
+        const graph = new GraphImp();
+        for (const edge of graphSchema.edges) {
+            graph.upsertEdge(edge.id, edge.leftNodeID, edge.rightNodeID);
+        }
+        for (const node of graphSchema.nodes) {
+            graph.upsertNode(node.id);
+        }
+        return graph;
+    }
 
-for (const node of nodes) {
-    graph.upsertNode(node.id);
-}
+    getPositions(graphSchema: GraphDataSchema): NodePositions {
+        return graphSchema.nodes;
+    }
 
-for (const edge of edges) {
-    graph.upsertEdge(edge.id, edge.leftNode, edge.rightNode);
-}
+    deserialise(graphData: unknown): InteractiveGraphImp {
+        const result = graphDataSchema.safeParse(graphData);
 
-export const graphRenderData: GraphRenderData = {
-    nodes: nodes,
-    edges: edges.map((edge) => ({ leftNodeID: edge.leftNode, rightNodeID: edge.rightNode })),
+        if (!result.success) {
+            throw new GraphDeserialisationError(`failed to validate graph data: ${result.error}`)
+        }
+
+        return new InteractiveGraphImp(this.createGraph(result.data), this.getPositions(result.data));
+    }
 }
