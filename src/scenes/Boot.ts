@@ -1,4 +1,5 @@
 import { Scene } from 'phaser';
+import { BACKGROUND_SEPIA } from './vars';
 
 export class Boot extends Scene {
     constructor() {
@@ -6,13 +7,11 @@ export class Boot extends Scene {
     }
 
     preload() {
-        //  The Boot Scene is typically used to load in any assets you require for your Preloader, such as a game logo or background.
-        //  The smaller the file size of the assets, the better, as the Boot Scene itself has no preloader.
-        this.load.image('background', 'assets/bg.png');
+
     }
 
     create() {
-        this.cameras.main.setBackgroundColor(0xdfd0d1);
+        this.cameras.main.setBackgroundColor(BACKGROUND_SEPIA);
         this.scene.start('Preloader');
     }
 }

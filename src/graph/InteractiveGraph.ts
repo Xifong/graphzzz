@@ -1,5 +1,6 @@
 import { GraphRenderData, Graph, InteractiveGraph, InteractiveGraphDeserialiser } from './types';
 import { GraphImp } from '../graph/Graph';
+import { GRAPH_MAX_X, GRAPH_MAX_Y } from './vars';
 import { z } from "zod";
 
 type NodePositions = {
@@ -32,8 +33,8 @@ class GraphDeserialisationError extends Error { }
 const graphDataSchema = z.object({
     nodes: z.array(z.object({
         id: z.number().int().nonnegative(),
-        x: z.number().nonnegative().lte(1000),
-        y: z.number().nonnegative().lte(1000),
+        x: z.number().nonnegative().lte(GRAPH_MAX_X),
+        y: z.number().nonnegative().lte(GRAPH_MAX_Y),
     })),
     edges: z.array(z.object({
         id: z.number().int().nonnegative(),

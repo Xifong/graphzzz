@@ -1,5 +1,7 @@
 import { Scene } from 'phaser';
 import { GraphRenderData } from '../graph/types';
+import { GRAPH_MAX_X, GRAPH_MAX_Y } from '../graph/vars';
+import { BACKGROUND_SEPIA } from './vars';
 
 interface PhaserPosition {
     x: number
@@ -8,8 +10,6 @@ interface PhaserPosition {
 
 export class GraphScene extends Scene {
     camera: Phaser.Cameras.Scene2D.Camera;
-    background: Phaser.GameObjects.Image;
-    msg_text: Phaser.GameObjects.Text;
     graphData: GraphRenderData;
 
     constructor() {
@@ -22,8 +22,8 @@ export class GraphScene extends Scene {
 
     create() {
         this.camera = this.cameras.main;
-        this.camera.setBackgroundColor(0xdfd0d1);
-        this.render_graph_test();
+        this.camera.setBackgroundColor(BACKGROUND_SEPIA);
+        this.renderGraph();
     }
 
     translate(x: number, y: number): PhaserPosition {
@@ -31,23 +31,13 @@ export class GraphScene extends Scene {
         const height: number = this.scale.height;
 
         return {
-            x: x * (width / 1000),
-            y: y * (height / 1000)
+            x: x * (width / GRAPH_MAX_X),
+            y: y * (height / GRAPH_MAX_Y)
         }
     }
 
-    render_graph_test() {
-        // GraphRenderer should create an interface for what it expects to render to and we should get Phaser to implement that interface
-        // with the implementation being injected into the GraphRenderer
-        // API: create node at game post
-        // API: link nodes
-        // i.e. GraphRenderer knows about what to render within the game context
-        // and the injected instance knows about how to render in Phaser
-
-        // Ultimately nodes and edges should probably be game objects (for exposing click events)
-        // but probably only bother considering this once we intend to expose the event
-
-        var graphics = this.add.graphics({
+    renderGraph() {
+        const graphics = this.add.graphics({
             lineStyle: {
                 width: 1,
                 color: 0x000000,

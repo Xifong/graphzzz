@@ -1,6 +1,5 @@
 import { Boot } from './scenes/Boot';
-import { GraphScene as MainGame } from './scenes/GraphScene';
-import { MainMenu } from './scenes/MainMenu';
+import { GraphScene } from './scenes/GraphScene';
 import { Preloader } from './scenes/Preloader';
 
 import { Game, Types } from "phaser";
@@ -20,8 +19,7 @@ const config: Types.Core.GameConfig = {
     scene: [
         Boot,
         Preloader,
-        MainMenu,
-        MainGame,
+        GraphScene,
     ]
 };
 

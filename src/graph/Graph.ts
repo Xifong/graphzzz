@@ -17,6 +17,7 @@ export class GraphImp implements Graph {
             newEdges.add(this.edges.get(edgeID)!);
         }
 
+        // node upsertion can mean adding new edges to an existing node
         this.nodes.set(id, {
             id: id,
             edges: [...newEdges],
@@ -27,6 +28,8 @@ export class GraphImp implements Graph {
 
     // nodes may optionally already exist
     upsertEdge(id: number, leftNodeID: number, rightNodeID: number): GraphEdge {
+        // must delete first to clean up references to the old edge, if the upserted edge
+        // is to safely replace an old edge with the same id but different nodes
         this.deleteIfExistsEdge(id);
 
         const leftNode = this.upsertNode(leftNodeID);
@@ -39,6 +42,8 @@ export class GraphImp implements Graph {
         }
         this.edges.set(id, newEdge);
 
+        // now that the eddge exists, reupsert the nodes to give them references to the
+        // current edge
         this.upsertNode(leftNodeID, [id]);
         this.upsertNode(rightNodeID, [id]);
 
