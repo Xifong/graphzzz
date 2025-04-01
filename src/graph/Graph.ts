@@ -1,8 +1,9 @@
+import { Graph, GraphNode, GraphEdge } from './types';
 import { z } from "zod";
 
 class GraphManipulationError extends Error { }
 
-class GraphImp implements Graph {
+export class GraphImp implements Graph {
     nodes: Map<number, GraphNode> = new Map();
     edges: Map<number, GraphEdge> = new Map();
 

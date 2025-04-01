@@ -1,19 +1,19 @@
-interface GraphEdge {
+export interface GraphEdge {
     id: number;
     leftNode: GraphNode;
     rightNode: GraphNode;
 }
 
-interface GraphNode {
+export interface GraphNode {
     id: number;
     edges: GraphEdge[];
 }
 
-interface Graph {
+export interface Graph {
     nodes: Map<number, GraphNode>;
     edges: Map<number, GraphEdge>;
 
-    upsertNode: (id: number, edgeIDs: number[]) => GraphNode;
+    upsertNode: (id: number, edgeIDs?: number[]) => GraphNode;
     upsertEdge: (id: number, leftNodeID: number, rightNodeID: number) => GraphEdge;
     deleteIfExistsNode: (id: number) => void;
     deleteIfExistsEdge: (id: number) => void;
@@ -21,3 +21,14 @@ interface Graph {
     serialise: () => string;
 }
 
+export interface GraphRenderData {
+    nodes: {
+        id: number,
+        x: number,
+        y: number,
+    }[],
+    edges: {
+        leftNodeID: number,
+        rightNodeID: number,
+    }[],
+}
