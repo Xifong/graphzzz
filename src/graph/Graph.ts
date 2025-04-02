@@ -2,6 +2,20 @@ import { Graph, GraphNode, GraphEdge } from './types';
 
 class GraphManipulationError extends Error { }
 
+export class GraphIterables<T> implements Iterable<T> {
+    nodes: Map<number, T>;
+
+    constructor(nodes: Map<number, T>) {
+        this.nodes = nodes;
+    }
+
+    *[Symbol.iterator](): Iterator<T> {
+        for (const node of this.nodes.values()) {
+            yield node;
+        }
+    }
+}
+
 export class GraphImp implements Graph {
     nodes: Map<number, GraphNode> = new Map();
     edges: Map<number, GraphEdge> = new Map();
@@ -85,11 +99,11 @@ export class GraphImp implements Graph {
     }
 
     serialise(): string {
-        const nodes = [...this.nodes.values()].map((node) => ({
+        const nodes = [...this.iterableNodeCopy].map((node) => ({
             id: node.id
         }));
 
-        const edges = [...this.edges.values()].map((edge) => ({
+        const edges = [...this.iterableEdgeCopy].map((edge) => ({
             id: edge.id,
             leftNodeID: edge.leftNode.id,
             rightNodeID: edge.rightNode.id,
@@ -99,5 +113,13 @@ export class GraphImp implements Graph {
             nodes: nodes,
             edges: edges
         });
+    }
+
+    get iterableNodeCopy(): Iterable<GraphNode> {
+        return new GraphIterables<GraphNode>(this.nodes);
+    }
+
+    get iterableEdgeCopy(): Iterable<GraphEdge> {
+        return new GraphIterables<GraphEdge>(this.edges);
     }
 }

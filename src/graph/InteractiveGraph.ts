@@ -21,7 +21,7 @@ export class InteractiveGraphImp implements InteractiveGraph {
     getRenderData(): GraphRenderData {
         return {
             nodes: this.positions,
-            edges: [...this.graph.edges.values()].map(
+            edges: [...this.graph.iterableEdgeCopy].map(
                 (edge) => ({ leftNodeID: edge.leftNode.id, rightNodeID: edge.rightNode.id })
             ),
         }

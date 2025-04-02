@@ -19,8 +19,8 @@ export interface GraphNode {
 }
 
 export interface Graph {
-    nodes: Map<number, GraphNode>;
-    edges: Map<number, GraphEdge>;
+    iterableNodeCopy: Iterable<GraphNode>;
+    iterableEdgeCopy: Iterable<GraphEdge>;
 
     upsertNode: (id: number, edgeIDs?: number[]) => GraphNode;
     upsertEdge: (id: number, leftNodeID: number, rightNodeID: number) => GraphEdge;
