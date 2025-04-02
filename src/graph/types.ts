@@ -16,6 +16,8 @@ export interface GraphEdge {
 export interface GraphNode {
     id: number;
     edges: GraphEdge[];
+
+    neighboursCopy: GraphNode[];
 }
 
 export interface Graph {

@@ -16,6 +16,28 @@ export class GraphIterables<T> implements Iterable<T> {
     }
 }
 
+export class GraphNodeImp implements GraphNode {
+    id: number;
+    edges: GraphEdge[];
+
+    constructor(id: number, edges: GraphEdge[]) {
+        this.id = id;
+        this.edges = edges;
+    }
+
+    get neighboursCopy(): Set<GraphNode> {
+        const neighbours = new Set<GraphNode>();
+        for (const edge of this.edges) {
+            const otherNode = this.id === edge.leftNode.id ? edge.rightNode : edge.leftNode;
+            if (otherNode.id === this.id) {
+                continue;
+            }
+            neighbours.add(otherNode);
+        }
+        return neighbours;
+    }
+}
+
 export class GraphImp implements Graph {
     nodes: Map<number, GraphNode> = new Map();
     edges: Map<number, GraphEdge> = new Map();
@@ -32,10 +54,7 @@ export class GraphImp implements Graph {
         }
 
         // node upsertion can mean adding new edges to an existing node
-        this.nodes.set(id, {
-            id: id,
-            edges: [...newEdges],
-        });
+        this.nodes.set(id, new GraphNodeImp(id, [...newEdges]));
 
         return this.nodes.get(id)!;
     }
