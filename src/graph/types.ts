@@ -17,7 +17,7 @@ export interface GraphNode {
     id: number;
     edges: GraphEdge[];
 
-    neighboursCopy: GraphNode[];
+    neighboursCopy: Set<GraphNode>;
 }
 
 export interface Graph {

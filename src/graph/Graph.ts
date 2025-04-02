@@ -3,10 +3,9 @@ import { Graph, GraphNode, GraphEdge } from './types';
 class GraphManipulationError extends Error { }
 
 export class GraphIterables<T> implements Iterable<T> {
-    nodes: Map<number, T>;
-
-    constructor(nodes: Map<number, T>) {
-        this.nodes = nodes;
+    constructor(
+        public nodes: Map<number, T>
+    ) {
     }
 
     *[Symbol.iterator](): Iterator<T> {
@@ -17,12 +16,10 @@ export class GraphIterables<T> implements Iterable<T> {
 }
 
 export class GraphNodeImp implements GraphNode {
-    id: number;
-    edges: GraphEdge[];
-
-    constructor(id: number, edges: GraphEdge[]) {
-        this.id = id;
-        this.edges = edges;
+    constructor(
+        public id: number,
+        public edges: GraphEdge[]
+    ) {
     }
 
     get neighboursCopy(): Set<GraphNode> {
