@@ -1,10 +1,10 @@
 import { Scene } from 'phaser';
-import { InteractiveGraph } from '../graph/types';
+import { RenderableGraph } from '../graph/types';
 import { GraphDataDeserialiserImp } from '../graph/InteractiveGraph';
 import { BACKGROUND_BEIGE } from './vars';
 
 export class Preloader extends Scene {
-    graph: InteractiveGraph;
+    graph: RenderableGraph;
 
     constructor() {
         super('Preloader');

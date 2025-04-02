@@ -36,8 +36,8 @@ export class GraphNodeImp implements GraphNode {
 }
 
 export class GraphImp implements Graph {
-    nodes: Map<number, GraphNode> = new Map();
-    edges: Map<number, GraphEdge> = new Map();
+    private nodes: Map<number, GraphNode> = new Map();
+    private edges: Map<number, GraphEdge> = new Map();
 
     // any edgeIDs must already exist
     upsertNode(id: number, edgeIDs: number[] = []): GraphNode {

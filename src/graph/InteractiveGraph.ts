@@ -1,4 +1,4 @@
-import { GraphRenderData, Graph, InteractiveGraph, InteractiveGraphDeserialiser } from './types';
+import { GraphRenderData, Graph, RenderableGraph, InteractiveGraphDeserialiser } from './types';
 import { GraphImp } from '../graph/Graph';
 import { GRAPH_MAX_X, GRAPH_MAX_Y } from './vars';
 import { z } from "zod";
@@ -9,7 +9,7 @@ type NodePositions = {
     y: number
 }[];
 
-export class InteractiveGraphImp implements InteractiveGraph {
+export class InteractiveGraphImp implements RenderableGraph {
     graph: Graph;
     positions: NodePositions;
 

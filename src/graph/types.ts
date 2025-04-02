@@ -1,10 +1,10 @@
-export interface InteractiveGraph {
+export interface RenderableGraph {
     getRenderData: () => GraphRenderData;
 }
 
 
 export interface InteractiveGraphDeserialiser {
-    deserialise: (graphRepresentation: string) => InteractiveGraph;
+    deserialise: (graphRepresentation: string) => RenderableGraph;
 }
 
 export interface GraphEdge {

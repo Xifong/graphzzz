@@ -1,16 +1,59 @@
 import { Scene } from 'phaser';
 import { GraphRenderData } from '../graph/types';
-import { GRAPH_MAX_X, GRAPH_MAX_Y } from '../graph/vars';
 import { BACKGROUND_BEIGE } from './vars';
+import { translatePos, translateRegion } from '../util';
 
-interface PhaserPosition {
-    x: number
-    y: number
+export class GraphCanvas extends Phaser.GameObjects.Zone {
+    constructor(
+        public scene: Scene,
+        public x: number,
+        public y: number,
+        public width: number,
+        public height: number,
+        public graphData: GraphRenderData
+    ) {
+        super(scene, x, y, width, height);
+        scene.add.existing(this);
+    }
+
+    addedToScene() {
+        this.renderGraph();
+    }
+
+    renderGraph() {
+        const graphics = this.scene.add.graphics({
+            lineStyle: {
+                width: 1,
+                color: 0x000000,
+                alpha: 1,
+            },
+            fillStyle: {
+                color: this.scene.cameras.main.backgroundColor.color,
+                alpha: 1,
+            }
+        });
+
+        for (const edge of this.graphData.edges) {
+            const leftNode = this.graphData.nodes.filter((n) => n.id === edge.leftNodeID)[0];
+            const rightNode = this.graphData.nodes.filter((n) => n.id === edge.rightNodeID)[0];
+
+            const phaserPositionL = translatePos(leftNode.x, leftNode.y);
+            const phaserPositionR = translatePos(rightNode.x, rightNode.y);
+
+            graphics.lineBetween(phaserPositionL.x, phaserPositionL.y, phaserPositionR.x, phaserPositionR.y);
+        }
+
+        for (const node of this.graphData.nodes) {
+            const phaserPosition = translatePos(node.x, node.y);
+            graphics.fillCircle(phaserPosition.x, phaserPosition.y, 20)
+            graphics.strokeCircle(phaserPosition.x, phaserPosition.y, 20)
+        }
+    }
 }
 
 export class GraphScene extends Scene {
-    camera: Phaser.Cameras.Scene2D.Camera;
     graphData: GraphRenderData;
+    camera: Phaser.Cameras.Scene2D.Camera;
 
     constructor() {
         super('GraphScene');
@@ -23,46 +66,8 @@ export class GraphScene extends Scene {
     create() {
         this.camera = this.cameras.main;
         this.camera.setBackgroundColor(BACKGROUND_BEIGE);
-        this.renderGraph();
-    }
 
-    translate(x: number, y: number): PhaserPosition {
-        const width: number = this.scale.width;
-        const height: number = this.scale.height;
-
-        return {
-            x: x * (width / GRAPH_MAX_X),
-            y: y * (height / GRAPH_MAX_Y)
-        }
-    }
-
-    renderGraph() {
-        const graphics = this.add.graphics({
-            lineStyle: {
-                width: 1,
-                color: 0x000000,
-                alpha: 1,
-            },
-            fillStyle: {
-                color: this.cameras.main.backgroundColor.color,
-                alpha: 1,
-            }
-        });
-
-        for (const edge of this.graphData.edges) {
-            const leftNode = this.graphData.nodes.filter((n) => n.id === edge.leftNodeID)[0];
-            const rightNode = this.graphData.nodes.filter((n) => n.id === edge.rightNodeID)[0];
-
-            const phaserPositionL = this.translate(leftNode.x, leftNode.y);
-            const phaserPositionR = this.translate(rightNode.x, rightNode.y);
-
-            graphics.lineBetween(phaserPositionL.x, phaserPositionL.y, phaserPositionR.x, phaserPositionR.y);
-        }
-
-        for (const node of this.graphData.nodes) {
-            const phaserPosition = this.translate(node.x, node.y);
-            graphics.fillCircle(phaserPosition.x, phaserPosition.y, 20)
-            graphics.strokeCircle(phaserPosition.x, phaserPosition.y, 20)
-        }
+        const phaserRegion = translateRegion(500, 500, 1000, 1000);
+        new GraphCanvas(this, phaserRegion.x, phaserRegion.y, phaserRegion.width, phaserRegion.height, this.graphData);
     }
 }
