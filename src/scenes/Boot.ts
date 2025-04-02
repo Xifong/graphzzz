@@ -1,5 +1,5 @@
 import { Scene } from 'phaser';
-import { BACKGROUND_SEPIA } from './vars';
+import { BACKGROUND_BEIGE } from './vars';
 
 export class Boot extends Scene {
     constructor() {
@@ -11,7 +11,7 @@ export class Boot extends Scene {
     }
 
     create() {
-        this.cameras.main.setBackgroundColor(BACKGROUND_SEPIA);
+        this.cameras.main.setBackgroundColor(BACKGROUND_BEIGE);
         this.scene.start('Preloader');
     }
 }

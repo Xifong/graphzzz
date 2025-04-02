@@ -1,7 +1,7 @@
 import { Scene } from 'phaser';
 import { GraphRenderData } from '../graph/types';
 import { GRAPH_MAX_X, GRAPH_MAX_Y } from '../graph/vars';
-import { BACKGROUND_SEPIA } from './vars';
+import { BACKGROUND_BEIGE } from './vars';
 
 interface PhaserPosition {
     x: number
@@ -22,7 +22,7 @@ export class GraphScene extends Scene {
 
     create() {
         this.camera = this.cameras.main;
-        this.camera.setBackgroundColor(BACKGROUND_SEPIA);
+        this.camera.setBackgroundColor(BACKGROUND_BEIGE);
         this.renderGraph();
     }
 
