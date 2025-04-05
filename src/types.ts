@@ -8,3 +8,7 @@ interface PhaserPosition {
     y: number
 }
 
+interface SimPosition {
+    x: number
+    y: number
+}

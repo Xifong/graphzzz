@@ -1,10 +1,15 @@
-export interface RenderableGraph {
+export interface InteractiveGraph {
+    placeNodeAt: (x: number, y: number) => void;
+    moveNodeTo: (id: number, x: number, y: number) => void;
+    connectNodeTo: (fromID: number, toID: number) => void;
+    deleteEdge: (id: number) => boolean;
+    deleteNode: (id: number) => boolean;
     getRenderData: () => GraphRenderData;
 }
 
 
 export interface InteractiveGraphDeserialiser {
-    deserialise: (graphRepresentation: string) => RenderableGraph;
+    deserialise: (graphRepresentation: string) => InteractiveGraph;
 }
 
 export interface GraphEdge {
@@ -26,8 +31,8 @@ export interface Graph {
 
     upsertNode: (id: number, edgeIDs?: number[]) => GraphNode;
     upsertEdge: (id: number, leftNodeID: number, rightNodeID: number) => GraphEdge;
-    deleteIfExistsNode: (id: number) => void;
-    deleteIfExistsEdge: (id: number) => void;
+    deleteIfExistsNode: (id: number) => boolean;
+    deleteIfExistsEdge: (id: number) => boolean;
 
     serialise: () => string;
 }

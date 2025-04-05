@@ -72,7 +72,7 @@ export class GraphImp implements Graph {
         }
         this.edges.set(id, newEdge);
 
-        // now that the eddge exists, reupsert the nodes to give them references to the
+        // now that the edge exists, reupsert the nodes to give them references to the
         // current edge
         this.upsertNode(leftNodeID, [id]);
         this.upsertNode(rightNodeID, [id]);
@@ -80,11 +80,11 @@ export class GraphImp implements Graph {
         return newEdge;
     }
 
-    deleteIfExistsNode(id: number) {
+    deleteIfExistsNode(id: number): boolean {
         const node = this.nodes.get(id);
 
         if (node === undefined) {
-            return
+            return false;
         }
 
         // Iterate over a copy in case deleteIfExistsEdge modifies the original
@@ -94,13 +94,14 @@ export class GraphImp implements Graph {
         }
 
         this.nodes.delete(id);
+        return true;
     }
 
-    deleteIfExistsEdge(id: number) {
+    deleteIfExistsEdge(id: number): boolean {
         const edge = this.edges.get(id);
 
         if (edge === undefined) {
-            return
+            return false;
         }
 
         if (edge.leftNode) {
@@ -112,6 +113,7 @@ export class GraphImp implements Graph {
         }
 
         this.edges.delete(id);
+        return true;
     }
 
     serialise(): string {

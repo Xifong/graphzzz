@@ -1,4 +1,4 @@
-import { GraphRenderData, Graph, RenderableGraph, InteractiveGraphDeserialiser } from './types';
+import { GraphRenderData, Graph, InteractiveGraph, InteractiveGraphDeserialiser } from './types';
 import { GraphImp } from '../graph/Graph';
 import { GRAPH_MAX_X, GRAPH_MAX_Y } from './vars';
 import { z } from "zod";
@@ -9,13 +9,52 @@ type NodePositions = {
     y: number
 }[];
 
-export class InteractiveGraphImp implements RenderableGraph {
-    graph: Graph;
-    positions: NodePositions;
+class InteractiveGraphManipulationError extends Error { }
 
-    constructor(graph: Graph, positions: NodePositions) {
-        this.graph = graph;
-        this.positions = positions;
+export class InteractiveGraphImp implements InteractiveGraph {
+    constructor(
+        private graph: Graph,
+        private positions: NodePositions,
+        private nextNodeID: number,
+        private nextEdgeID: number
+    ) {
+    }
+
+    moveNodeTo(id: number, x: number, y: number) {
+        const entriesWithID = this.positions.filter((pos) => pos.id === id);
+
+        if (entriesWithID.length !== 1) {
+            throw new InteractiveGraphManipulationError(`cannot move node with id '${id}' because there were '${entriesWithID.length}' entries with the same id`);
+        }
+
+        entriesWithID[0] = {
+            id: id,
+            x: x,
+            y: y
+        }
+    }
+
+    connectNodeTo(fromID: number, toID: number) {
+        this.graph.upsertEdge(this.nextEdgeID, fromID, toID);
+        this.nextEdgeID++;
+    }
+
+    deleteEdge(id: number): boolean {
+        return this.graph.deleteIfExistsEdge(id);
+    }
+
+    deleteNode(id: number): boolean {
+        return this.graph.deleteIfExistsNode(id);
+    }
+
+    placeNodeAt(x: number, y: number) {
+        this.graph.upsertNode(this.nextNodeID);
+        this.positions.push({
+            id: this.nextNodeID,
+            x: x,
+            y: y
+        });
+        this.nextNodeID++;
     }
 
     getRenderData(): GraphRenderData {
@@ -67,6 +106,23 @@ export class GraphDataDeserialiserImp implements InteractiveGraphDeserialiser {
             throw new GraphDeserialisationError(`failed to validate graph data: ${result.error}`)
         }
 
-        return new InteractiveGraphImp(this.createGraph(result.data), this.getPositions(result.data));
+        let largestNodeID = -1;
+        for (const node of result.data.nodes) {
+            if (node.id > largestNodeID) {
+                largestNodeID = node.id;
+            }
+        }
+
+
+        let largestEdgeID = -1;
+        for (const edge of result.data.edges) {
+            if (edge.id > largestEdgeID) {
+                largestEdgeID = edge.id;
+            }
+        }
+
+        return new InteractiveGraphImp(
+            this.createGraph(result.data), this.getPositions(result.data), largestNodeID + 1, largestEdgeID + 1
+        );
     }
 }

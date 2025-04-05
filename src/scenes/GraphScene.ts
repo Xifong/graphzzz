@@ -1,73 +1,165 @@
 import { Scene } from 'phaser';
-import { GraphRenderData } from '../graph/types';
+import { InteractiveGraph } from '../graph/types';
 import { BACKGROUND_BEIGE } from './vars';
-import { translatePos, translateRegion } from '../util';
+import { getPhaserPositionOf, getPhaserRegionOf, getSimPositionOf } from '../util';
+import { DebugGraphics, SceneWithDebug } from '../DebugGraphics';
 
-export class GraphCanvas extends Phaser.GameObjects.Zone {
+const graphicsStyle = {
+    lineStyle: {
+        width: 1.8,
+        color: 0x000000,
+        alpha: 1,
+    },
+    fillStyle: {
+        color: BACKGROUND_BEIGE,
+        alpha: 1,
+    }
+}
+
+const NODE_RADIUS = 22;
+
+export class NodeObject extends Phaser.GameObjects.Container {
+    private graphics: Phaser.GameObjects.Graphics;
+
     constructor(
         public scene: Scene,
-        public x: number,
-        public y: number,
+        public readonly id: number,
+        public simX: number,
+        public simY: number,
+
+    ) {
+        const phaserPosition = getPhaserPositionOf(simX, simY);
+        super(scene, phaserPosition.x, phaserPosition.y);
+
+        this.setData("id", id);
+        this.setName(`id: ${this.id}`);
+
+        this.graphics = this.scene.add.graphics(graphicsStyle);
+        this.add(this.graphics);
+
+        this.drawNode();
+
+        this.setSize(NODE_RADIUS * 2, NODE_RADIUS * 2);
+        this.setInteractive(
+            new Phaser.Geom.Circle(20, 20, NODE_RADIUS),
+            Phaser.Geom.Circle.Contains
+        );
+
+        this.on(
+            "pointerover",
+            () => this.graphics.setAlpha(0.7)
+        );
+
+        this.on(
+            "pointerout",
+            () => this.graphics.setAlpha(1.0)
+        );
+    }
+
+    private drawNode() {
+        this.graphics.clear();
+
+        this.graphics.fillCircle(0, 0, NODE_RADIUS);
+        this.graphics.strokeCircle(0, 0, NODE_RADIUS);
+    }
+}
+
+export class GraphCanvas extends Phaser.GameObjects.Container {
+    private nodes: Map<number, NodeObject>;
+
+    constructor(
+        public scene: SceneWithDebug,
+        public simX: number,
+        public simY: number,
         public width: number,
         public height: number,
-        public graphData: GraphRenderData
+        private graph: InteractiveGraph
     ) {
-        super(scene, x, y, width, height);
-        scene.add.existing(this);
+        super(scene, simX, simY);
+        this.nodes = new Map();
+        this.registerEditorCallbacks();
+        this.setInteractive();
     }
 
-    addedToScene() {
-        this.renderGraph();
-    }
+    public renderGraph() {
+        const graphics = this.scene.add.graphics(graphicsStyle);
 
-    renderGraph() {
-        const graphics = this.scene.add.graphics({
-            lineStyle: {
-                width: 1,
-                color: 0x000000,
-                alpha: 1,
-            },
-            fillStyle: {
-                color: this.scene.cameras.main.backgroundColor.color,
-                alpha: 1,
-            }
-        });
+        const graphRenderData = this.graph.getRenderData();
 
-        for (const edge of this.graphData.edges) {
-            const leftNode = this.graphData.nodes.filter((n) => n.id === edge.leftNodeID)[0];
-            const rightNode = this.graphData.nodes.filter((n) => n.id === edge.rightNodeID)[0];
+        for (const edge of graphRenderData.edges) {
+            const leftNode = graphRenderData.nodes.filter((n) => n.id === edge.leftNodeID)[0];
+            const rightNode = graphRenderData.nodes.filter((n) => n.id === edge.rightNodeID)[0];
 
-            const phaserPositionL = translatePos(leftNode.x, leftNode.y);
-            const phaserPositionR = translatePos(rightNode.x, rightNode.y);
+            const phaserPositionL = getPhaserPositionOf(leftNode.x, leftNode.y);
+            const phaserPositionR = getPhaserPositionOf(rightNode.x, rightNode.y);
 
             graphics.lineBetween(phaserPositionL.x, phaserPositionL.y, phaserPositionR.x, phaserPositionR.y);
         }
 
-        for (const node of this.graphData.nodes) {
-            const phaserPosition = translatePos(node.x, node.y);
-            graphics.fillCircle(phaserPosition.x, phaserPosition.y, 20)
-            graphics.strokeCircle(phaserPosition.x, phaserPosition.y, 20)
+        for (const node of graphRenderData.nodes) {
+            const newNode = new NodeObject(this.scene, node.id, node.x, node.y);
+            this.nodes.set(node.id, newNode);
+            this.scene.add.existing(newNode);
         }
+    }
+
+    private registerEditorCallbacks() {
+        this.on(
+            "pointerdown",
+            (pointer: any, localX: any, localY: any, _2: any) => {
+                if (pointer.rightButtonDown()) {
+                    return;
+                }
+                const position = getSimPositionOf(localX, localY);
+                this.graph.placeNodeAt(position.x, position.y);
+                this.renderGraph();
+            }
+        )
     }
 }
 
 export class GraphScene extends Scene {
-    graphData: GraphRenderData;
-    camera: Phaser.Cameras.Scene2D.Camera;
+    private graph: InteractiveGraph;
+    private camera: Phaser.Cameras.Scene2D.Camera;
+    private graphCanvas: GraphCanvas;
+    public debugGraphicsGroup: Phaser.GameObjects.Group;
 
     constructor() {
         super('GraphScene');
     }
 
-    init(graphData: GraphRenderData) {
-        this.graphData = graphData;
+    public init(graph: InteractiveGraph) {
+        this.graph = graph;
     }
 
-    create() {
+    public create() {
+
         this.camera = this.cameras.main;
         this.camera.setBackgroundColor(BACKGROUND_BEIGE);
 
-        const phaserRegion = translateRegion(500, 500, 1000, 1000);
-        new GraphCanvas(this, phaserRegion.x, phaserRegion.y, phaserRegion.width, phaserRegion.height, this.graphData);
+        const phaserRegion = getPhaserRegionOf(500, 500, 1000, 1000);
+        this.graphCanvas = new GraphCanvas(
+            this,
+            phaserRegion.x,
+            phaserRegion.y,
+            phaserRegion.width,
+            phaserRegion.height,
+            this.graph
+        );
+        this.add.existing(this.graphCanvas);
+
+        this.graphCanvas.renderGraph();
+    }
+
+    public update(_: number, _2: number) {
+        if (this.debugGraphicsGroup) {
+            Phaser.Actions.Call(
+                this.debugGraphicsGroup.getChildren(),
+                (obj: Phaser.GameObjects.GameObject) => {
+                    (obj as DebugGraphics).drawDebug();
+                },
+                this
+            );
+        }
     }
 }

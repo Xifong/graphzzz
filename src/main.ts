@@ -21,7 +21,8 @@ const config: Types.Core.GameConfig = {
         Boot,
         Preloader,
         GraphScene,
-    ]
+    ],
+    disableContextMenu: true,
 };
 
 export default new Game(config);
