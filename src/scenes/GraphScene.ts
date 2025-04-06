@@ -17,6 +17,8 @@ const graphicsStyle = {
 }
 
 const NODE_RADIUS = 22;
+const NODE_DEPTH = 0;
+const EDGE_DEPTH = -1;
 
 export const NodeEvents = {
     REQUEST_DELETE: 'requestdelete'
@@ -48,6 +50,7 @@ export class NodeObject extends Phaser.GameObjects.Container {
             new Phaser.Geom.Circle(20, 20, NODE_RADIUS),
             Phaser.Geom.Circle.Contains
         );
+        this.scene.input.setDraggable(this);
 
         this.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
             if (pointer.rightButtonDown()) {
@@ -70,14 +73,23 @@ export class NodeObject extends Phaser.GameObjects.Container {
     private drawNode() {
         this.graphics.clear();
 
+        this.setDepth(NODE_DEPTH);
         this.graphics.fillCircle(0, 0, NODE_RADIUS);
         this.graphics.strokeCircle(0, 0, NODE_RADIUS);
+    }
+
+    public moveNodePosition(simX: number, simY: number) {
+        this.simX = simX;
+        this.simY = simY;
+        const phaserPosition = getPhaserPositionOf(simX, simY);
+        this.setPosition(phaserPosition.x, phaserPosition.y);
+        this.drawNode();
     }
 }
 
 export class GraphCanvas extends Phaser.GameObjects.Container {
     private edgeGraphics: Phaser.GameObjects.Graphics;
-    private nodes: Map<number, NodeObject>;
+    private nodeObjects: Map<number, NodeObject>;
 
     constructor(
         public scene: SceneWithDebug,
@@ -88,16 +100,13 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
         private graph: InteractiveGraph
     ) {
         super(scene, simX, simY);
-        this.nodes = new Map();
+        this.nodeObjects = new Map();
         this.setInteractive();
     }
 
     public renderGraph() {
         this.edgeGraphics?.destroy();
         this.edgeGraphics = this.scene.add.graphics(graphicsStyle);
-
-        this.nodes.forEach(node => node.destroy());
-        this.nodes.clear();
 
         const graphRenderData = this.graph.getRenderData();
 
@@ -109,11 +118,15 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
             const phaserPositionR = getPhaserPositionOf(rightNode.x, rightNode.y);
 
             this.edgeGraphics.lineBetween(phaserPositionL.x, phaserPositionL.y, phaserPositionR.x, phaserPositionR.y);
+            this.edgeGraphics.setDepth(EDGE_DEPTH);
         }
 
         for (const node of graphRenderData.nodes) {
+            if (this.nodeObjects.has(node.id)) {
+                continue;
+            }
             const newNode = new NodeObject(this.scene, node.id, node.x, node.y);
-            this.nodes.set(node.id, newNode);
+            this.nodeObjects.set(node.id, newNode);
             this.scene.add.existing(newNode);
         }
 
@@ -124,16 +137,28 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
         this.off(Phaser.Input.Events.POINTER_DOWN);
         this.off(Phaser.Input.Events.DRAG_START);
 
-        for (const node of this.nodes.values()) {
+        for (const node of this.nodeObjects.values()) {
             node.off(NodeEvents.REQUEST_DELETE);
+            node.off(Phaser.Input.Events.DRAG);
+
             node.on(
                 NodeEvents.REQUEST_DELETE,
                 (nodeID: number) => {
                     this.graph.deleteNode(nodeID);
+                    this.nodeObjects.get(nodeID)?.destroy();
+                    this.nodeObjects.delete(nodeID);
                     this.renderGraph();
                 }
             );
-
+            node.on(
+                Phaser.Input.Events.DRAG,
+                (_: any, x: number, y: number) => {
+                    const simPos = getSimPositionOf(x, y);
+                    this.graph.moveNodeTo(node.id, simPos.x, simPos.y);
+                    this.nodeObjects.get(node.id)!.moveNodePosition(simPos.x, simPos.y);
+                    this.renderGraph();
+                }
+            )
         }
 
         this.on(
@@ -145,16 +170,6 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
                 const position = getSimPositionOf(localX, localY);
                 this.graph.placeNodeAt(position.x, position.y);
                 this.renderGraph();
-            }
-        );
-
-        this.on(
-            Phaser.Input.Events.DRAG_START,
-            (pointer: any, _: number, _2: number) => {
-                console.log("drag start");
-                if (pointer.rightButtonDown()) {
-                    return;
-                }
             }
         );
     }
