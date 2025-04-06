@@ -3,12 +3,14 @@ import { getPhaserPositionOf } from '../util';
 import { GRAPHICS_STYLE, NODE_RADIUS, NODE_DEPTH } from '../scenes/vars';
 
 export const NodeEvents = {
-    REQUEST_DELETE: 'requestdelete'
+    REQUEST_DELETE: 'request-delete',
+    REQUEST_EDGE_LINK: 'request-edge'
 };
 
 
 export class NodeObject extends Phaser.GameObjects.Container {
     private graphics: Phaser.GameObjects.Graphics;
+    private shiftKey: Phaser.Input.Keyboard.Key;
 
     constructor(
         public scene: Scene,
@@ -19,6 +21,7 @@ export class NodeObject extends Phaser.GameObjects.Container {
     ) {
         const phaserPosition = getPhaserPositionOf(simX, simY);
         super(scene, phaserPosition.x, phaserPosition.y);
+        this.shiftKey = this.scene.input.keyboard!.addKey("SHIFT");
 
         this.setData("id", id);
         this.setName(`Node '${this.id}'`);
@@ -35,21 +38,38 @@ export class NodeObject extends Phaser.GameObjects.Container {
         );
         this.scene.input.setDraggable(this);
 
-        this.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
+        this.on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
+            if (this.shiftKey.isDown) {
+                pointer.event.preventDefault();
+                this.emit(NodeEvents.REQUEST_EDGE_LINK, this.id);
+                return;
+            }
+
             if (pointer.rightButtonDown()) {
                 pointer.event.preventDefault();
                 this.emit(NodeEvents.REQUEST_DELETE, this.id);
+                return;
             }
         });
 
         this.on(
-            Phaser.Input.Events.POINTER_OVER,
+            Phaser.Input.Events.GAMEOBJECT_POINTER_OVER,
             () => this.graphics.setAlpha(0.7)
         );
 
         this.on(
-            Phaser.Input.Events.POINTER_OUT,
+            Phaser.Input.Events.GAMEOBJECT_POINTER_OUT,
             () => this.graphics.setAlpha(1.0)
+        );
+
+        this.on(
+            Phaser.Input.Events.GAMEOBJECT_POINTER_UP,
+            (pointer: Phaser.Input.Pointer) => {
+                if (this.shiftKey.isDown) {
+                    pointer.event.preventDefault();
+                    this.emit(NodeEvents.REQUEST_EDGE_LINK, this.id);
+                }
+            }
         );
     }
 

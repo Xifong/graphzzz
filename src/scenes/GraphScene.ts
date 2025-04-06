@@ -1,6 +1,6 @@
 import { Scene } from 'phaser';
 import { InteractiveGraph } from '../graph/types';
-import { getPhaserRegionOf, getSimPositionOf } from '../util';
+import { getPhaserPositionOf, getPhaserRegionOf, getSimPositionOf } from '../util';
 import { NodeEvents, NodeObject } from '../phaser/NodeObject';
 import { BACKGROUND_BEIGE, CANVAS_DEPTH } from './vars';
 import { EdgeEvents, EdgeObject } from '../phaser/EdgeObject';
@@ -9,6 +9,10 @@ import { EdgeEvents, EdgeObject } from '../phaser/EdgeObject';
 export class GraphCanvas extends Phaser.GameObjects.Container {
     private nodeObjects: Map<number, NodeObject>;
     private edgeObjects: Map<number, EdgeObject>;
+    private shiftKey: Phaser.Input.Keyboard.Key;
+    private isCreatingEdge: boolean = false;
+    private edgeCreatingFrom: number;
+    private moveLocked: boolean = false;
 
     constructor(
         public scene: Scene,
@@ -22,6 +26,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
         this.nodeObjects = new Map();
         this.edgeObjects = new Map();
         this.setDepth(CANVAS_DEPTH);
+        this.shiftKey = this.scene.input.keyboard!.addKey("SHIFT");
         this.setInteractive();
     }
 
@@ -55,10 +60,11 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
 
     private registerEditorCallbacks() {
         this.off(Phaser.Input.Events.POINTER_DOWN);
-        this.off(Phaser.Input.Events.DRAG_START);
+        this.shiftKey.off(Phaser.Input.Keyboard.Events.UP);
 
         for (const node of this.nodeObjects.values()) {
             node.off(NodeEvents.REQUEST_DELETE);
+            node.off(NodeEvents.REQUEST_EDGE_LINK);
             node.off(Phaser.Input.Events.DRAG);
             node.off(Phaser.Input.Events.DRAG_END);
 
@@ -75,18 +81,47 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
                 Phaser.Input.Events.DRAG,
                 (_: any, x: number, y: number) => {
                     const simPos = getSimPositionOf(x, y);
-                    this.graph.moveNodeTo(node.id, simPos.x, simPos.y);
-                    this.nodeObjects.get(node.id)!.moveNodePosition(simPos.x, simPos.y);
-                    this.renderGraph();
+
+                    if (this.shiftKey.isDown) {
+                        this.moveLocked = true;
+
+                        const fromNode = this.nodeObjects.get(this.edgeCreatingFrom);
+                        if (fromNode) {
+                            this.continueEdgeCreation(getSimPositionOf(fromNode.x, fromNode.y), simPos);
+                        }
+                        return;
+                    }
+                    if (!this.moveLocked) {
+                        this.graph.moveNodeTo(node.id, simPos.x, simPos.y);
+                        this.nodeObjects.get(node.id)!.moveNodePosition(simPos.x, simPos.y);
+                        this.renderGraph();
+                    }
                 }
             );
             node.on(
                 Phaser.Input.Events.DRAG_END,
                 (_: any, _2: number, _3: number) => {
+                    this.moveLocked = false;
+
+                    if (this.isCreatingEdge) {
+                        this.deleteEdgePreview();
+                        return;
+                    }
+
                     // Refresh the node object to prevent positions possibly going out of sync
                     this.nodeObjects.get(node.id)?.destroy();
                     this.nodeObjects.delete(node.id);
                     this.renderGraph();
+                }
+            )
+            node.on(
+                NodeEvents.REQUEST_EDGE_LINK,
+                (nodeID: number) => {
+                    if (this.isCreatingEdge) {
+                        this.finishEdgeCreation(nodeID);
+                    } else {
+                        this.startEdgeCreation(nodeID);
+                    }
                 }
             )
         }
@@ -103,6 +138,16 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
             );
         }
 
+        this.shiftKey.on(
+            Phaser.Input.Keyboard.Events.UP,
+            (_: any) => {
+                if (this.isCreatingEdge) {
+                    this.cancelEdgeCreation();
+                    return;
+                }
+            }
+        )
+
         this.on(
             Phaser.Input.Events.POINTER_DOWN,
             (pointer: any, localX: any, localY: any, _2: any) => {
@@ -114,6 +159,48 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
                 this.renderGraph();
             }
         );
+    }
+
+    private startEdgeCreation(fromID: number) {
+        if (!this.isCreatingEdge) {
+            this.edgeCreatingFrom = fromID;
+            this.isCreatingEdge = true;
+        }
+        const fromNode = this.nodeObjects.get(fromID);
+        if (fromNode) {
+            const simPosition = getSimPositionOf(fromNode.x, fromNode.y);
+            this.continueEdgeCreation(simPosition, simPosition);
+        }
+    }
+
+    private continueEdgeCreation(fromPosition: { x: number, y: number }, toPosition: { x: number, y: number }) {
+        this.deleteEdgePreview();
+
+        const newEdge = new EdgeObject(this.scene, -1, fromPosition.x, fromPosition.y, toPosition.x, toPosition.y, false);
+        this.edgeObjects.set(-1, newEdge);
+        this.scene.add.existing(newEdge);
+    }
+
+    private finishEdgeCreation(toID: number) {
+        if (!this.isCreatingEdge) {
+            return;
+        }
+        this.graph.connectNodeTo(this.edgeCreatingFrom, toID);
+        this.renderGraph();
+        this.cancelEdgeCreation();
+    }
+
+    private cancelEdgeCreation() {
+        if (!this.isCreatingEdge) {
+            return;
+        }
+        this.deleteEdgePreview();
+        this.isCreatingEdge = false;
+    }
+
+    private deleteEdgePreview() {
+        this.edgeObjects.get(-1)?.destroy();
+        this.edgeObjects.delete(-1);
     }
 }
 

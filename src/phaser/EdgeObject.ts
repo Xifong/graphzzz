@@ -1,11 +1,12 @@
 import { Scene } from "phaser";
 import { EDGE_DEPTH, GRAPHICS_STYLE } from "../scenes/vars";
 import { getPhaserPositionOf } from "../util";
+import { DEBUG_VISUALS } from "../vars";
 
 const HITBOX_THICKNESS = 20;
 
 export const EdgeEvents = {
-    REQUEST_DELETE: 'requestdelete'
+    REQUEST_DELETE: 'request-delete'
 };
 
 
@@ -20,21 +21,28 @@ export class EdgeObject extends Phaser.GameObjects.Graphics {
         public simStartY: number,
         public simEndX: number,
         public simEndY: number,
+        public isInteractive: boolean = true,
     ) {
         super(scene, GRAPHICS_STYLE);
 
         this.setData("id", id);
         this.setName(`Edge '${this.id}'`);
 
-        this.hitboxPolygon = this.getHitbox();
+        if (this.isInteractive) {
+            this.hitboxPolygon = this.getHitbox();
+        }
         this.drawEdge();
 
-        this.setInteractive(
-            this.hitboxPolygon,
-            Phaser.Geom.Polygon.Contains
-        );
+        if (this.hitboxPolygon) {
+            this.setInteractive(
+                this.hitboxPolygon,
+                Phaser.Geom.Polygon.Contains
+            );
+        } else {
+            this.disableInteractive();
+        }
 
-        this.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
+        this.on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
             if (pointer.rightButtonDown()) {
                 pointer.event.preventDefault();
                 this.emit(EdgeEvents.REQUEST_DELETE, this.id);
@@ -42,7 +50,7 @@ export class EdgeObject extends Phaser.GameObjects.Graphics {
         });
 
         this.on(
-            Phaser.Input.Events.POINTER_OVER,
+            Phaser.Input.Events.GAMEOBJECT_POINTER_OVER,
             () => {
                 if (this.currentGraphicsStyle.lineStyle) {
                     this.currentGraphicsStyle.lineStyle.color = 0xff0000;
@@ -52,18 +60,20 @@ export class EdgeObject extends Phaser.GameObjects.Graphics {
         );
 
         this.on(
-            Phaser.Input.Events.POINTER_OUT,
+            Phaser.Input.Events.GAMEOBJECT_POINTER_OUT,
             () => {
                 this.currentGraphicsStyle = JSON.parse(JSON.stringify(GRAPHICS_STYLE));
                 this.drawEdge();
             }
         );
 
-        // const points = this.hitboxPolygon?.getPoints(100);
-        // for (const point of points!) {
-        //     this.fillStyle(0xff0000);
-        //     this.fillPoint(point.x, point.y, 10);
-        // }
+        const points = this.hitboxPolygon?.getPoints(100);
+        if (points && DEBUG_VISUALS) {
+            for (const point of points) {
+                this.fillStyle(0xff0000);
+                this.fillPoint(point.x, point.y, 10);
+            }
+        }
     }
 
     private getHitbox(): Phaser.Geom.Polygon | null {
