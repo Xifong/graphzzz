@@ -1,2 +1,2 @@
-- Use map for positions in InteractiveGraph
+- shift release on to node should create edge too.
 - deserialise InteractiveGraph, not just Graph
