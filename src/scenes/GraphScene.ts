@@ -140,6 +140,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
         for (const node of this.nodeObjects.values()) {
             node.off(NodeEvents.REQUEST_DELETE);
             node.off(Phaser.Input.Events.DRAG);
+            node.off(Phaser.Input.Events.DRAG_END);
 
             node.on(
                 NodeEvents.REQUEST_DELETE,
@@ -156,6 +157,16 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
                     const simPos = getSimPositionOf(x, y);
                     this.graph.moveNodeTo(node.id, simPos.x, simPos.y);
                     this.nodeObjects.get(node.id)!.moveNodePosition(simPos.x, simPos.y);
+                    this.renderGraph();
+                }
+            );
+            node.on(
+                Phaser.Input.Events.DRAG_END,
+                (_: any, _2: number, _3: number) => {
+                    console.log("drag end");
+                    // Refresh the node object to prevent positions possibly going out of sync
+                    this.nodeObjects.get(node.id)?.destroy();
+                    this.nodeObjects.delete(node.id);
                     this.renderGraph();
                 }
             )
