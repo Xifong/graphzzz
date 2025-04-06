@@ -1,2 +1,2 @@
-- enumerate edges and nodes on Graph (removing the [...this.nodes.values()].map pattern)
+- Use map for positions in InteractiveGraph
 - deserialise InteractiveGraph, not just Graph

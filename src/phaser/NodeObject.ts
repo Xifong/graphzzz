@@ -1,9 +1,6 @@
 import { Scene } from 'phaser';
 import { getPhaserPositionOf } from '../util';
-import { GRAPHICS_STYLE } from '../scenes/vars';
-
-const NODE_RADIUS = 22;
-const NODE_DEPTH = 0;
+import { GRAPHICS_STYLE, NODE_RADIUS, NODE_DEPTH } from '../scenes/vars';
 
 export const NodeEvents = {
     REQUEST_DELETE: 'requestdelete'
@@ -24,7 +21,7 @@ export class NodeObject extends Phaser.GameObjects.Container {
         super(scene, phaserPosition.x, phaserPosition.y);
 
         this.setData("id", id);
-        this.setName(`id: ${this.id}`);
+        this.setName(`Node '${this.id}'`);
 
         this.graphics = this.scene.add.graphics(GRAPHICS_STYLE);
         this.add(this.graphics);

@@ -1,14 +1,14 @@
 import { Scene } from 'phaser';
 import { InteractiveGraph } from '../graph/types';
-import { getPhaserPositionOf, getPhaserRegionOf, getSimPositionOf } from '../util';
+import { getPhaserRegionOf, getSimPositionOf } from '../util';
 import { NodeEvents, NodeObject } from '../phaser/NodeObject';
-import { BACKGROUND_BEIGE, GRAPHICS_STYLE } from './vars';
+import { BACKGROUND_BEIGE, CANVAS_DEPTH } from './vars';
+import { EdgeObject } from '../phaser/EdgeObject';
 
-const EDGE_DEPTH = -1;
 
 export class GraphCanvas extends Phaser.GameObjects.Container {
-    private edgeGraphics: Phaser.GameObjects.Graphics;
     private nodeObjects: Map<number, NodeObject>;
+    private edgeObjects: Map<number, EdgeObject>;
 
     constructor(
         public scene: Scene,
@@ -20,24 +20,25 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
     ) {
         super(scene, simX, simY);
         this.nodeObjects = new Map();
+        this.edgeObjects = new Map();
+        this.setDepth(CANVAS_DEPTH);
         this.setInteractive();
     }
 
     public renderGraph() {
-        this.edgeGraphics?.destroy();
-        this.edgeGraphics = this.scene.add.graphics(GRAPHICS_STYLE);
-
         const graphRenderData = this.graph.getRenderData();
+
+        this.edgeObjects.forEach((edge) => edge.destroy());
+        this.edgeObjects.clear();
+
 
         for (const edge of graphRenderData.edges) {
             const leftNode = graphRenderData.nodes.filter((n) => n.id === edge.leftNodeID)[0];
             const rightNode = graphRenderData.nodes.filter((n) => n.id === edge.rightNodeID)[0];
 
-            const phaserPositionL = getPhaserPositionOf(leftNode.x, leftNode.y);
-            const phaserPositionR = getPhaserPositionOf(rightNode.x, rightNode.y);
-
-            this.edgeGraphics.lineBetween(phaserPositionL.x, phaserPositionL.y, phaserPositionR.x, phaserPositionR.y);
-            this.edgeGraphics.setDepth(EDGE_DEPTH);
+            const newEdge = new EdgeObject(this.scene, edge.id, leftNode.x, leftNode.y, rightNode.x, rightNode.y);
+            this.edgeObjects.set(edge.id, newEdge);
+            this.scene.add.existing(newEdge);
         }
 
         for (const node of graphRenderData.nodes) {

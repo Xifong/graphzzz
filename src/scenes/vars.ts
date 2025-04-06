@@ -11,3 +11,9 @@ export const GRAPHICS_STYLE = {
         alpha: 1,
     }
 }
+
+export const NODE_RADIUS = 22;
+
+export const NODE_DEPTH = 0;
+export const EDGE_DEPTH = -1;
+export const CANVAS_DEPTH = -Number.MAX_SAFE_INTEGER;

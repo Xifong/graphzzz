@@ -62,7 +62,7 @@ export class InteractiveGraphImp implements InteractiveGraph {
         return {
             nodes: this.positions,
             edges: [...this.graph.iterableEdgeCopy].map(
-                (edge) => ({ leftNodeID: edge.leftNode.id, rightNodeID: edge.rightNode.id })
+                (edge) => ({ id: edge.id, leftNodeID: edge.leftNode.id, rightNodeID: edge.rightNode.id })
             ),
         }
     }

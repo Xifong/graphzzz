@@ -44,6 +44,7 @@ export interface GraphRenderData {
         y: number,
     }[],
     edges: {
+        id: number,
         leftNodeID: number,
         rightNodeID: number,
     }[],
