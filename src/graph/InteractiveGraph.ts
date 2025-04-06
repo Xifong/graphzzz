@@ -22,16 +22,16 @@ export class InteractiveGraphImp implements InteractiveGraph {
 
     moveNodeTo(id: number, x: number, y: number) {
         const entriesWithID = this.positions.filter((pos) => pos.id === id);
-
         if (entriesWithID.length !== 1) {
             throw new InteractiveGraphManipulationError(`cannot move node with id '${id}' because there were '${entriesWithID.length}' entries with the same id`);
         }
 
-        entriesWithID[0] = {
+        this.positions = this.positions.filter((pos) => pos.id !== id);
+        this.positions.push({
             id: id,
             x: x,
             y: y
-        }
+        });
     }
 
     connectNodeTo(fromID: number, toID: number) {
@@ -44,6 +44,7 @@ export class InteractiveGraphImp implements InteractiveGraph {
     }
 
     deleteNode(id: number): boolean {
+        this.positions = this.positions.filter((n) => n.id !== id);
         return this.graph.deleteIfExistsNode(id);
     }
 

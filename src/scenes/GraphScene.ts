@@ -18,6 +18,10 @@ const graphicsStyle = {
 
 const NODE_RADIUS = 22;
 
+export const NodeEvents = {
+    REQUEST_DELETE: 'requestdelete'
+};
+
 export class NodeObject extends Phaser.GameObjects.Container {
     private graphics: Phaser.GameObjects.Graphics;
 
@@ -45,13 +49,20 @@ export class NodeObject extends Phaser.GameObjects.Container {
             Phaser.Geom.Circle.Contains
         );
 
+        this.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
+            if (pointer.rightButtonDown()) {
+                pointer.event.preventDefault();
+                this.emit(NodeEvents.REQUEST_DELETE, this.id);
+            }
+        });
+
         this.on(
-            "pointerover",
+            Phaser.Input.Events.POINTER_OVER,
             () => this.graphics.setAlpha(0.7)
         );
 
         this.on(
-            "pointerout",
+            Phaser.Input.Events.POINTER_OUT,
             () => this.graphics.setAlpha(1.0)
         );
     }
@@ -65,6 +76,7 @@ export class NodeObject extends Phaser.GameObjects.Container {
 }
 
 export class GraphCanvas extends Phaser.GameObjects.Container {
+    private edgeGraphics: Phaser.GameObjects.Graphics;
     private nodes: Map<number, NodeObject>;
 
     constructor(
@@ -77,12 +89,15 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
     ) {
         super(scene, simX, simY);
         this.nodes = new Map();
-        this.registerEditorCallbacks();
         this.setInteractive();
     }
 
     public renderGraph() {
-        const graphics = this.scene.add.graphics(graphicsStyle);
+        this.edgeGraphics?.destroy();
+        this.edgeGraphics = this.scene.add.graphics(graphicsStyle);
+
+        this.nodes.forEach(node => node.destroy());
+        this.nodes.clear();
 
         const graphRenderData = this.graph.getRenderData();
 
@@ -93,7 +108,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
             const phaserPositionL = getPhaserPositionOf(leftNode.x, leftNode.y);
             const phaserPositionR = getPhaserPositionOf(rightNode.x, rightNode.y);
 
-            graphics.lineBetween(phaserPositionL.x, phaserPositionL.y, phaserPositionR.x, phaserPositionR.y);
+            this.edgeGraphics.lineBetween(phaserPositionL.x, phaserPositionL.y, phaserPositionR.x, phaserPositionR.y);
         }
 
         for (const node of graphRenderData.nodes) {
@@ -101,11 +116,28 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
             this.nodes.set(node.id, newNode);
             this.scene.add.existing(newNode);
         }
+
+        this.registerEditorCallbacks();
     }
 
     private registerEditorCallbacks() {
+        this.off(Phaser.Input.Events.POINTER_DOWN);
+        this.off(Phaser.Input.Events.DRAG_START);
+
+        for (const node of this.nodes.values()) {
+            node.off(NodeEvents.REQUEST_DELETE);
+            node.on(
+                NodeEvents.REQUEST_DELETE,
+                (nodeID: number) => {
+                    this.graph.deleteNode(nodeID);
+                    this.renderGraph();
+                }
+            );
+
+        }
+
         this.on(
-            "pointerdown",
+            Phaser.Input.Events.POINTER_DOWN,
             (pointer: any, localX: any, localY: any, _2: any) => {
                 if (pointer.rightButtonDown()) {
                     return;
@@ -114,7 +146,17 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
                 this.graph.placeNodeAt(position.x, position.y);
                 this.renderGraph();
             }
-        )
+        );
+
+        this.on(
+            Phaser.Input.Events.DRAG_START,
+            (pointer: any, _: number, _2: number) => {
+                console.log("drag start");
+                if (pointer.rightButtonDown()) {
+                    return;
+                }
+            }
+        );
     }
 }
 
@@ -133,7 +175,6 @@ export class GraphScene extends Scene {
     }
 
     public create() {
-
         this.camera = this.cameras.main;
         this.camera.setBackgroundColor(BACKGROUND_BEIGE);
 
