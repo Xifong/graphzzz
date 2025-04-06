@@ -162,7 +162,6 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
             node.on(
                 Phaser.Input.Events.DRAG_END,
                 (_: any, _2: number, _3: number) => {
-                    console.log("drag end");
                     // Refresh the node object to prevent positions possibly going out of sync
                     this.nodeObjects.get(node.id)?.destroy();
                     this.nodeObjects.delete(node.id);
