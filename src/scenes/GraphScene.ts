@@ -3,7 +3,7 @@ import { InteractiveGraph } from '../graph/types';
 import { getPhaserRegionOf, getSimPositionOf } from '../util';
 import { NodeEvents, NodeObject } from '../phaser/NodeObject';
 import { BACKGROUND_BEIGE, CANVAS_DEPTH } from './vars';
-import { EdgeObject } from '../phaser/EdgeObject';
+import { EdgeEvents, EdgeObject } from '../phaser/EdgeObject';
 
 
 export class GraphCanvas extends Phaser.GameObjects.Container {
@@ -89,6 +89,18 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
                     this.renderGraph();
                 }
             )
+        }
+
+        for (const edge of this.edgeObjects.values()) {
+            edge.off(EdgeEvents.REQUEST_DELETE);
+
+            edge.on(
+                EdgeEvents.REQUEST_DELETE,
+                (edgeID: number) => {
+                    this.graph.deleteEdge(edgeID);
+                    this.renderGraph();
+                }
+            );
         }
 
         this.on(

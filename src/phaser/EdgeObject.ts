@@ -4,6 +4,11 @@ import { getPhaserPositionOf } from "../util";
 
 const HITBOX_THICKNESS = 20;
 
+export const EdgeEvents = {
+    REQUEST_DELETE: 'requestdelete'
+};
+
+
 export class EdgeObject extends Phaser.GameObjects.Graphics {
     private hitboxPolygon: Phaser.Geom.Polygon | null = null;
     private currentGraphicsStyle: Phaser.Types.GameObjects.Graphics.Options = JSON.parse(JSON.stringify(GRAPHICS_STYLE));
@@ -28,6 +33,13 @@ export class EdgeObject extends Phaser.GameObjects.Graphics {
             this.hitboxPolygon,
             Phaser.Geom.Polygon.Contains
         );
+
+        this.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
+            if (pointer.rightButtonDown()) {
+                pointer.event.preventDefault();
+                this.emit(EdgeEvents.REQUEST_DELETE, this.id);
+            }
+        });
 
         this.on(
             Phaser.Input.Events.POINTER_OVER,
