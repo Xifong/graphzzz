@@ -3,11 +3,11 @@ import { GraphImp } from '../graph/Graph';
 import { GRAPH_MAX_X, GRAPH_MAX_Y } from './vars';
 import { z } from "zod";
 
-type NodePositions = {
+type NodePositions = Map<number, {
     id: number,
     x: number,
     y: number
-}[];
+}>;
 
 class InteractiveGraphManipulationError extends Error { }
 
@@ -21,13 +21,12 @@ export class InteractiveGraphImp implements InteractiveGraph {
     }
 
     moveNodeTo(id: number, x: number, y: number) {
-        const entriesWithID = this.positions.filter((pos) => pos.id === id);
-        if (entriesWithID.length !== 1) {
+        if (!this.positions.get(id)) {
             throw new InteractiveGraphManipulationError(`cannot move node with id '${id}' because there were '${entriesWithID.length}' entries with the same id`);
         }
+        this.positions.delete(id);
 
-        this.positions = this.positions.filter((pos) => pos.id !== id);
-        this.positions.push({
+        this.positions.set(id, {
             id: id,
             x: x,
             y: y
@@ -44,13 +43,13 @@ export class InteractiveGraphImp implements InteractiveGraph {
     }
 
     deleteNode(id: number): boolean {
-        this.positions = this.positions.filter((n) => n.id !== id);
+        this.positions.delete(id);
         return this.graph.deleteIfExistsNode(id);
     }
 
     placeNodeAt(x: number, y: number) {
         this.graph.upsertNode(this.nextNodeID);
-        this.positions.push({
+        this.positions.set(this.nextNodeID, {
             id: this.nextNodeID,
             x: x,
             y: y
@@ -60,7 +59,7 @@ export class InteractiveGraphImp implements InteractiveGraph {
 
     getRenderData(): GraphRenderData {
         return {
-            nodes: this.positions,
+            nodes: [...this.positions.values()],
             edges: [...this.graph.iterableEdgeCopy].map(
                 (edge) => ({ id: edge.id, leftNodeID: edge.leftNode.id, rightNodeID: edge.rightNode.id })
             ),
@@ -97,7 +96,11 @@ export class GraphDataDeserialiserImp implements InteractiveGraphDeserialiser {
     }
 
     getPositions(graphSchema: GraphDataSchema): NodePositions {
-        return graphSchema.nodes;
+        let nodePositions = new Map();
+        for (const node of graphSchema.nodes) {
+            nodePositions.set(node.id, node);
+        }
+        return nodePositions;
     }
 
     deserialise(graphData: unknown): InteractiveGraphImp {
