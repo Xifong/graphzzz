@@ -2,7 +2,6 @@ import { Scene } from 'phaser';
 import { InteractiveGraph } from '../graph/types';
 import { BACKGROUND_BEIGE } from './vars';
 import { getPhaserPositionOf, getPhaserRegionOf, getSimPositionOf } from '../util';
-import { DebugGraphics, SceneWithDebug } from '../DebugGraphics';
 
 const graphicsStyle = {
     lineStyle: {
@@ -92,7 +91,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
     private nodeObjects: Map<number, NodeObject>;
 
     constructor(
-        public scene: SceneWithDebug,
+        public scene: Scene,
         public simX: number,
         public simY: number,
         public width: number,
@@ -190,7 +189,6 @@ export class GraphScene extends Scene {
     private graph: InteractiveGraph;
     private camera: Phaser.Cameras.Scene2D.Camera;
     private graphCanvas: GraphCanvas;
-    public debugGraphicsGroup: Phaser.GameObjects.Group;
 
     constructor() {
         super('GraphScene');
@@ -216,17 +214,5 @@ export class GraphScene extends Scene {
         this.add.existing(this.graphCanvas);
 
         this.graphCanvas.renderGraph();
-    }
-
-    public update(_: number, _2: number) {
-        if (this.debugGraphicsGroup) {
-            Phaser.Actions.Call(
-                this.debugGraphicsGroup.getChildren(),
-                (obj: Phaser.GameObjects.GameObject) => {
-                    (obj as DebugGraphics).drawDebug();
-                },
-                this
-            );
-        }
     }
 }
