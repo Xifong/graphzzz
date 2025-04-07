@@ -60,11 +60,13 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
 
     private registerEditorCallbacks() {
         this.off(Phaser.Input.Events.POINTER_DOWN);
+        this.off(Phaser.Input.Events.POINTER_UP);
         this.shiftKey.off(Phaser.Input.Keyboard.Events.UP);
 
         for (const node of this.nodeObjects.values()) {
             node.off(NodeEvents.REQUEST_DELETE);
-            node.off(NodeEvents.REQUEST_EDGE_LINK);
+            node.off(NodeEvents.REQUEST_EDGE_START);
+            node.off(NodeEvents.REQUEST_EDGE_END);
             node.off(Phaser.Input.Events.DRAG);
             node.off(Phaser.Input.Events.DRAG_END);
 
@@ -115,13 +117,15 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
                 }
             )
             node.on(
-                NodeEvents.REQUEST_EDGE_LINK,
+                NodeEvents.REQUEST_EDGE_START,
                 (nodeID: number) => {
-                    if (this.isCreatingEdge) {
-                        this.finishEdgeCreation(nodeID);
-                    } else {
-                        this.startEdgeCreation(nodeID);
-                    }
+                    this.startEdgeCreation(nodeID);
+                }
+            )
+            node.on(
+                NodeEvents.REQUEST_EDGE_END,
+                (nodeID: number) => {
+                    this.finishEdgeCreation(nodeID);
                 }
             )
         }
@@ -150,13 +154,23 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
 
         this.on(
             Phaser.Input.Events.POINTER_DOWN,
-            (pointer: any, localX: any, localY: any, _2: any) => {
+            (pointer: Phaser.Input.Pointer, localX: number, localY: number, _2: any) => {
                 if (pointer.rightButtonDown()) {
                     return;
                 }
                 const position = getSimPositionOf(localX, localY);
                 this.graph.placeNodeAt(position.x, position.y);
                 this.renderGraph();
+            }
+        );
+
+        this.on(
+            Phaser.Input.Events.POINTER_UP,
+            (_: Phaser.Input.Pointer, _1: number, _2: number, _3: any) => {
+                if (this.isCreatingEdge) {
+                    this.cancelEdgeCreation();
+                    return;
+                }
             }
         );
     }

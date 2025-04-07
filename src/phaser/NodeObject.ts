@@ -4,7 +4,8 @@ import { GRAPHICS_STYLE, NODE_RADIUS, NODE_DEPTH } from '../scenes/vars';
 
 export const NodeEvents = {
     REQUEST_DELETE: 'request-delete',
-    REQUEST_EDGE_LINK: 'request-edge'
+    REQUEST_EDGE_START: 'request-start',
+    REQUEST_EDGE_END: 'request-end'
 };
 
 
@@ -41,7 +42,7 @@ export class NodeObject extends Phaser.GameObjects.Container {
         this.on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
             if (this.shiftKey.isDown) {
                 pointer.event.preventDefault();
-                this.emit(NodeEvents.REQUEST_EDGE_LINK, this.id);
+                this.emit(NodeEvents.REQUEST_EDGE_START, this.id);
                 return;
             }
 
@@ -67,7 +68,7 @@ export class NodeObject extends Phaser.GameObjects.Container {
             (pointer: Phaser.Input.Pointer) => {
                 if (this.shiftKey.isDown) {
                     pointer.event.preventDefault();
-                    this.emit(NodeEvents.REQUEST_EDGE_LINK, this.id);
+                    this.emit(NodeEvents.REQUEST_EDGE_END, this.id);
                 }
             }
         );
