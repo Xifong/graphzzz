@@ -4,14 +4,16 @@ import { GRAPHICS_STYLE, NODE_RADIUS, NODE_DEPTH } from '../scenes/vars';
 
 export const NodeEvents = {
     REQUEST_DELETE: 'request-delete',
-    REQUEST_EDGE_START: 'request-start',
-    REQUEST_EDGE_END: 'request-end'
+    REQUEST_EDGE_START: 'request-edge-start',
+    REQUEST_EDGE_END: 'request-edge-end',
+    NOTIFY_EDGE_CANDIDATE: 'notify-edge-candidate',
+    NOTIFY_STOP_EDGE_CANDIDATE: 'notify-stop-edge-candidate'
 };
 
 
 export class NodeObject extends Phaser.GameObjects.Container {
     private graphics: Phaser.GameObjects.Graphics;
-    private shiftKey: Phaser.Input.Keyboard.Key;
+    private shiftKey: Phaser.Input.Keyboard.Key | null = null;
 
     constructor(
         public scene: Scene,
@@ -22,7 +24,10 @@ export class NodeObject extends Phaser.GameObjects.Container {
     ) {
         const phaserPosition = getPhaserPositionOf(simX, simY);
         super(scene, phaserPosition.x, phaserPosition.y);
-        this.shiftKey = this.scene.input.keyboard!.addKey("SHIFT");
+
+        if (this.scene.input.keyboard) {
+            this.shiftKey = this.scene.input.keyboard.addKey("SHIFT");
+        }
 
         this.setData("id", id);
         this.setName(`Node '${this.id}'`);
@@ -40,7 +45,7 @@ export class NodeObject extends Phaser.GameObjects.Container {
         this.scene.input.setDraggable(this);
 
         this.on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
-            if (this.shiftKey.isDown) {
+            if (this.shiftKey?.isDown) {
                 pointer.event.preventDefault();
                 this.emit(NodeEvents.REQUEST_EDGE_START, this.id);
                 return;
@@ -55,18 +60,24 @@ export class NodeObject extends Phaser.GameObjects.Container {
 
         this.on(
             Phaser.Input.Events.GAMEOBJECT_POINTER_OVER,
-            () => this.graphics.setAlpha(0.7)
+            () => {
+                this.graphics.setAlpha(0.7)
+                this.emit(NodeEvents.NOTIFY_EDGE_CANDIDATE, this.id);
+            }
         );
 
         this.on(
             Phaser.Input.Events.GAMEOBJECT_POINTER_OUT,
-            () => this.graphics.setAlpha(1.0)
+            () => {
+                this.graphics.setAlpha(1.0)
+                this.emit(NodeEvents.NOTIFY_STOP_EDGE_CANDIDATE, this.id);
+            }
         );
 
         this.on(
             Phaser.Input.Events.GAMEOBJECT_POINTER_UP,
             (pointer: Phaser.Input.Pointer) => {
-                if (this.shiftKey.isDown) {
+                if (this.shiftKey?.isDown) {
                     pointer.event.preventDefault();
                     this.emit(NodeEvents.REQUEST_EDGE_END, this.id);
                 }

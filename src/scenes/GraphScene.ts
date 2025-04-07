@@ -13,6 +13,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
     private isCreatingEdge: boolean = false;
     private edgeCreatingFrom: number;
     private moveLocked: boolean = false;
+    private edgeCandidate: number | null = null;
 
     constructor(
         public scene: Scene,
@@ -59,17 +60,8 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
     }
 
     private registerEditorCallbacks() {
-        this.off(Phaser.Input.Events.POINTER_DOWN);
-        this.off(Phaser.Input.Events.POINTER_UP);
-        this.shiftKey.off(Phaser.Input.Keyboard.Events.UP);
-
         for (const node of this.nodeObjects.values()) {
             node.off(NodeEvents.REQUEST_DELETE);
-            node.off(NodeEvents.REQUEST_EDGE_START);
-            node.off(NodeEvents.REQUEST_EDGE_END);
-            node.off(Phaser.Input.Events.DRAG);
-            node.off(Phaser.Input.Events.DRAG_END);
-
             node.on(
                 NodeEvents.REQUEST_DELETE,
                 (nodeID: number) => {
@@ -79,6 +71,8 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
                     this.renderGraph();
                 }
             );
+
+            node.off(Phaser.Input.Events.DRAG);
             node.on(
                 Phaser.Input.Events.DRAG,
                 (_: any, x: number, y: number) => {
@@ -100,6 +94,8 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
                     }
                 }
             );
+
+            node.off(Phaser.Input.Events.DRAG_END);
             node.on(
                 Phaser.Input.Events.DRAG_END,
                 (_: any, _2: number, _3: number) => {
@@ -115,19 +111,41 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
                     this.nodeObjects.delete(node.id);
                     this.renderGraph();
                 }
-            )
+            );
+
+            node.off(NodeEvents.REQUEST_EDGE_START);
             node.on(
                 NodeEvents.REQUEST_EDGE_START,
                 (nodeID: number) => {
                     this.startEdgeCreation(nodeID);
                 }
-            )
+            );
+
+            node.off(NodeEvents.REQUEST_EDGE_END);
             node.on(
                 NodeEvents.REQUEST_EDGE_END,
                 (nodeID: number) => {
                     this.finishEdgeCreation(nodeID);
                 }
-            )
+            );
+
+            node.off(NodeEvents.NOTIFY_EDGE_CANDIDATE);
+            node.on(
+                NodeEvents.NOTIFY_EDGE_CANDIDATE,
+                (nodeID: number) => {
+                    this.edgeCandidate = nodeID;
+                }
+            );
+
+            node.off(NodeEvents.NOTIFY_STOP_EDGE_CANDIDATE);
+            node.on(
+                NodeEvents.NOTIFY_STOP_EDGE_CANDIDATE,
+                (nodeID: number) => {
+                    if (this.edgeCandidate === nodeID) {
+                        this.edgeCandidate = null;
+                    }
+                }
+            );
         }
 
         for (const edge of this.edgeObjects.values()) {
@@ -142,16 +160,23 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
             );
         }
 
+        this.shiftKey.off(Phaser.Input.Keyboard.Events.UP);
         this.shiftKey.on(
             Phaser.Input.Keyboard.Events.UP,
             (_: any) => {
-                if (this.isCreatingEdge) {
-                    this.cancelEdgeCreation();
+                if (!this.isCreatingEdge) {
                     return;
+                }
+                // Logically redundant null check to satisfy TS
+                if (Number.isFinite(this.edgeCandidate) && this.edgeCandidate !== null) {
+                    this.finishEdgeCreation(this.edgeCandidate);
+                } else {
+                    this.cancelEdgeCreation();
                 }
             }
         )
 
+        this.off(Phaser.Input.Events.POINTER_DOWN);
         this.on(
             Phaser.Input.Events.POINTER_DOWN,
             (pointer: Phaser.Input.Pointer, localX: number, localY: number, _2: any) => {
@@ -164,6 +189,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
             }
         );
 
+        this.off(Phaser.Input.Events.POINTER_UP);
         this.on(
             Phaser.Input.Events.POINTER_UP,
             (_: Phaser.Input.Pointer, _1: number, _2: number, _3: any) => {
