@@ -1,0 +1,196 @@
+{
+    "nodes": [
+        {
+            "id": 0,
+            "x": 120,
+            "y": 70
+        },
+        {
+            "id": 5,
+            "x": 179.65825874694875,
+            "y": 366.38929678577256
+        },
+        {
+            "id": 2,
+            "x": 378.2750203417413,
+            "y": 420.0428874437685
+        },
+        {
+            "id": 4,
+            "x": 672.8885272579333,
+            "y": 640.9915390532132
+        },
+        {
+            "id": 6,
+            "x": 227.17656631407658,
+            "y": 578.8126704426265
+        },
+        {
+            "id": 7,
+            "x": 332.62815296989436,
+            "y": 725.5996084189919
+        },
+        {
+            "id": 8,
+            "x": 496.66395443449954,
+            "y": 711.2789315432489
+        },
+        {
+            "id": 11,
+            "x": 755.7363710333608,
+            "y": 534.6572500757525
+        },
+        {
+            "id": 13,
+            "x": 876.159479251424,
+            "y": 595.52012679766
+        },
+        {
+            "id": 16,
+            "x": 844.2636289666397,
+            "y": 291.205743188122
+        },
+        {
+            "id": 17,
+            "x": 808.4621643612694,
+            "y": 636.0953779455982
+        },
+        {
+            "id": 15,
+            "x": 772.6606997558991,
+            "y": 358.03556860825586
+        },
+        {
+            "id": 12,
+            "x": 898.2912937347438,
+            "y": 402.19098897513
+        },
+        {
+            "id": 3,
+            "x": 424.06834825061037,
+            "y": 289.46134302962497
+        }
+    ],
+    "edges": [
+        {
+            "id": 1,
+            "leftNodeID": 0,
+            "rightNodeID": 2
+        },
+        {
+            "id": 2,
+            "leftNodeID": 0,
+            "rightNodeID": 3
+        },
+        {
+            "id": 3,
+            "leftNodeID": 3,
+            "rightNodeID": 4
+        },
+        {
+            "id": 4,
+            "leftNodeID": 2,
+            "rightNodeID": 3
+        },
+        {
+            "id": 5,
+            "leftNodeID": 4,
+            "rightNodeID": 2
+        },
+        {
+            "id": 6,
+            "leftNodeID": 0,
+            "rightNodeID": 5
+        },
+        {
+            "id": 7,
+            "leftNodeID": 5,
+            "rightNodeID": 2
+        },
+        {
+            "id": 8,
+            "leftNodeID": 8,
+            "rightNodeID": 8
+        },
+        {
+            "id": 9,
+            "leftNodeID": 8,
+            "rightNodeID": 2
+        },
+        {
+            "id": 10,
+            "leftNodeID": 8,
+            "rightNodeID": 4
+        },
+        {
+            "id": 11,
+            "leftNodeID": 7,
+            "rightNodeID": 2
+        },
+        {
+            "id": 12,
+            "leftNodeID": 6,
+            "rightNodeID": 2
+        },
+        {
+            "id": 13,
+            "leftNodeID": 6,
+            "rightNodeID": 7
+        },
+        {
+            "id": 14,
+            "leftNodeID": 11,
+            "rightNodeID": 12
+        },
+        {
+            "id": 15,
+            "leftNodeID": 13,
+            "rightNodeID": 12
+        },
+        {
+            "id": 16,
+            "leftNodeID": 11,
+            "rightNodeID": 13
+        },
+        {
+            "id": 17,
+            "leftNodeID": 15,
+            "rightNodeID": 11
+        },
+        {
+            "id": 18,
+            "leftNodeID": 15,
+            "rightNodeID": 12
+        },
+        {
+            "id": 19,
+            "leftNodeID": 11,
+            "rightNodeID": 17
+        },
+        {
+            "id": 20,
+            "leftNodeID": 17,
+            "rightNodeID": 13
+        },
+        {
+            "id": 21,
+            "leftNodeID": 15,
+            "rightNodeID": 16
+        },
+        {
+            "id": 22,
+            "leftNodeID": 16,
+            "rightNodeID": 12
+        },
+        {
+            "id": 23,
+            "leftNodeID": 11,
+            "rightNodeID": 4
+        },
+        {
+            "id": 24,
+            "leftNodeID": 16,
+            "rightNodeID": 0
+        }
+    ]
+}

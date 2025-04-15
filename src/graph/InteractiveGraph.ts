@@ -129,8 +129,8 @@ function deserialise(graphData: unknown): InteractiveGraphImp {
     );
 }
 
-function serialise(_: InteractiveGraph): string {
-    return ""
+function serialise(graph: InteractiveGraph): string {
+    return JSON.stringify(graph.getRenderData(), null, 4);
 }
 
 export function getGraphDeserialiser(): InteractiveGraphDeserialiser {

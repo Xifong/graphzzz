@@ -4,6 +4,7 @@ import { getPhaserRegionOf, getSimPositionOf } from '../util';
 import { NodeEvents, NodeObject } from '../phaser/NodeObject';
 import { BACKGROUND_BEIGE, CANVAS_DEPTH } from './vars';
 import { EdgeEvents, EdgeObject } from '../phaser/EdgeObject';
+import { getGraphSerialiser } from '../graph/InteractiveGraph';
 
 
 export class GraphCanvas extends Phaser.GameObjects.Container {
@@ -248,6 +249,7 @@ export class GraphScene extends Scene {
     private graph: InteractiveGraph;
     private camera: Phaser.Cameras.Scene2D.Camera;
     private graphCanvas: GraphCanvas;
+    private escapeKey: Phaser.Input.Keyboard.Key;
 
     constructor() {
         super('GraphScene');
@@ -255,6 +257,7 @@ export class GraphScene extends Scene {
 
     public init(graph: InteractiveGraph) {
         this.graph = graph;
+        this.escapeKey = this.input.keyboard!.addKey("ESC");
     }
 
     public create() {
@@ -273,5 +276,16 @@ export class GraphScene extends Scene {
         this.add.existing(this.graphCanvas);
 
         this.graphCanvas.renderGraph();
+        this.registerTemporarySave();
+    }
+
+    private registerTemporarySave() {
+        this.escapeKey.on(
+            Phaser.Input.Keyboard.Events.UP,
+            () => {
+                const serialiser = getGraphSerialiser();
+                console.log(serialiser.serialise(this.graph));
+            }
+        )
     }
 }

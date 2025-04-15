@@ -116,23 +116,6 @@ export class GraphImp implements Graph {
         return true;
     }
 
-    serialise(): string {
-        const nodes = [...this.iterableNodeCopy].map((node) => ({
-            id: node.id
-        }));
-
-        const edges = [...this.iterableEdgeCopy].map((edge) => ({
-            id: edge.id,
-            leftNodeID: edge.leftNode.id,
-            rightNodeID: edge.rightNode.id,
-        }));
-
-        return JSON.stringify({
-            nodes: nodes,
-            edges: edges
-        });
-    }
-
     get iterableNodeCopy(): Iterable<GraphNode> {
         return new GraphIterables<GraphNode>(this.nodes);
     }

@@ -37,8 +37,6 @@ export interface Graph {
     upsertEdge: (id: number, leftNodeID: number, rightNodeID: number) => GraphEdge;
     deleteIfExistsNode: (id: number) => boolean;
     deleteIfExistsEdge: (id: number) => boolean;
-
-    serialise: () => string;
 }
 
 export interface GraphRenderData {
