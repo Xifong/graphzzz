@@ -25,13 +25,6 @@ const config: Types.Core.GameConfig = {
         GraphScene,
     ],
     disableContextMenu: true,
-    physics: {
-        default: 'arcade',
-        arcade: {
-            debug: false,
-            gravity: { x: 0, y: 0 }
-        }
-    },
     render: {
         antialias: true,
         pixelArt: false

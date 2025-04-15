@@ -1,4 +1,4 @@
-import { GraphRenderData, Graph, InteractiveGraph, InteractiveGraphDeserialiser } from './types';
+import { GraphRenderData, Graph, InteractiveGraph, InteractiveGraphDeserialiser, InteractiveGraphSerialiser } from './types';
 import { GraphImp } from '../graph/Graph';
 import { GRAPH_MAX_X, GRAPH_MAX_Y } from './vars';
 import { z } from "zod";
@@ -22,7 +22,7 @@ export class InteractiveGraphImp implements InteractiveGraph {
 
     moveNodeTo(id: number, x: number, y: number) {
         if (!this.positions.get(id)) {
-            throw new InteractiveGraphManipulationError(`cannot move node with id '${id}' because there were '${entriesWithID.length}' entries with the same id`);
+            throw new InteractiveGraphManipulationError(`cannot move node with id '${id}' because there were no entries with this id`);
         }
         this.positions.delete(id);
 
@@ -83,50 +83,64 @@ const graphDataSchema = z.object({
 })
 type GraphDataSchema = z.infer<typeof graphDataSchema>;
 
-export class GraphDataDeserialiserImp implements InteractiveGraphDeserialiser {
-    createGraph(graphSchema: GraphDataSchema): Graph {
-        const graph = new GraphImp();
-        for (const edge of graphSchema.edges) {
-            graph.upsertEdge(edge.id, edge.leftNodeID, edge.rightNodeID);
-        }
-        for (const node of graphSchema.nodes) {
-            graph.upsertNode(node.id);
-        }
-        return graph;
+function createGraph(graphSchema: GraphDataSchema): Graph {
+    const graph = new GraphImp();
+    for (const edge of graphSchema.edges) {
+        graph.upsertEdge(edge.id, edge.leftNodeID, edge.rightNodeID);
+    }
+    for (const node of graphSchema.nodes) {
+        graph.upsertNode(node.id);
+    }
+    return graph;
+}
+
+function getPositions(graphSchema: GraphDataSchema): NodePositions {
+    let nodePositions = new Map();
+    for (const node of graphSchema.nodes) {
+        nodePositions.set(node.id, node);
+    }
+    return nodePositions;
+}
+
+function deserialise(graphData: unknown): InteractiveGraphImp {
+    const result = graphDataSchema.safeParse(graphData);
+
+    if (!result.success) {
+        throw new GraphDeserialisationError(`failed to validate graph data: ${result.error}`)
     }
 
-    getPositions(graphSchema: GraphDataSchema): NodePositions {
-        let nodePositions = new Map();
-        for (const node of graphSchema.nodes) {
-            nodePositions.set(node.id, node);
+    let largestNodeID = -1;
+    for (const node of result.data.nodes) {
+        if (node.id > largestNodeID) {
+            largestNodeID = node.id;
         }
-        return nodePositions;
     }
 
-    deserialise(graphData: unknown): InteractiveGraphImp {
-        const result = graphDataSchema.safeParse(graphData);
 
-        if (!result.success) {
-            throw new GraphDeserialisationError(`failed to validate graph data: ${result.error}`)
+    let largestEdgeID = -1;
+    for (const edge of result.data.edges) {
+        if (edge.id > largestEdgeID) {
+            largestEdgeID = edge.id;
         }
+    }
 
-        let largestNodeID = -1;
-        for (const node of result.data.nodes) {
-            if (node.id > largestNodeID) {
-                largestNodeID = node.id;
-            }
-        }
+    return new InteractiveGraphImp(
+        createGraph(result.data), getPositions(result.data), largestNodeID + 1, largestEdgeID + 1
+    );
+}
 
+function serialise(_: InteractiveGraph): string {
+    return ""
+}
 
-        let largestEdgeID = -1;
-        for (const edge of result.data.edges) {
-            if (edge.id > largestEdgeID) {
-                largestEdgeID = edge.id;
-            }
-        }
+export function getGraphDeserialiser(): InteractiveGraphDeserialiser {
+    return {
+        deserialise: deserialise,
+    }
+}
 
-        return new InteractiveGraphImp(
-            this.createGraph(result.data), this.getPositions(result.data), largestNodeID + 1, largestEdgeID + 1
-        );
+export function getGraphSerialiser(): InteractiveGraphSerialiser {
+    return {
+        serialise: serialise,
     }
 }

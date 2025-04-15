@@ -12,6 +12,10 @@ export interface InteractiveGraphDeserialiser {
     deserialise: (graphRepresentation: string) => InteractiveGraph;
 }
 
+export interface InteractiveGraphSerialiser {
+    serialise: (graph: InteractiveGraph) => string;
+}
+
 export interface GraphEdge {
     id: number;
     leftNode: GraphNode;

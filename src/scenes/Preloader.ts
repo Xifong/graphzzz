@@ -1,6 +1,7 @@
 import { Scene } from 'phaser';
-import { GraphDataDeserialiserImp } from '../graph/InteractiveGraph';
 import { BACKGROUND_BEIGE } from './vars';
+import { getGraphDeserialiser, getGraphSerialiser } from '../graph/InteractiveGraph';
+import { InteractiveGraphDeserialiser } from '../graph/types';
 
 export class Preloader extends Scene {
     constructor() {
@@ -24,7 +25,7 @@ export class Preloader extends Scene {
     create() {
         this.cameras.main.setBackgroundColor(BACKGROUND_BEIGE);
 
-        const graphDeserialiser = new GraphDataDeserialiserImp();
+        const graphDeserialiser: InteractiveGraphDeserialiser = getGraphDeserialiser();
         // Probably will need to make this a Phaser global in future as more interactivity is added
         const graph = graphDeserialiser.deserialise(this.cache.json.get("graph-data"));
         this.scene.start('GraphScene', graph);
