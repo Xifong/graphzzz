@@ -5,8 +5,10 @@ import { Preloader } from './scenes/Preloader';
 import { Game, Types } from "phaser";
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from './vars';
 
-//  Find out more information about the Game Config at:
-//  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
+/**
+ * Main game configuration object
+ * @see https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
+ */
 const config: Types.Core.GameConfig = {
     type: Phaser.AUTO,
     width: CANVAS_WIDTH,
@@ -23,6 +25,17 @@ const config: Types.Core.GameConfig = {
         GraphScene,
     ],
     disableContextMenu: true,
+    physics: {
+        default: 'arcade',
+        arcade: {
+            debug: false,
+            gravity: { x: 0, y: 0 }
+        }
+    },
+    render: {
+        antialias: true,
+        pixelArt: false
+    }
 };
 
 export default new Game(config);
