@@ -5,6 +5,7 @@ import { NodeEvents, NodeObject } from '../phaser/NodeObject';
 import { BACKGROUND_BEIGE, CANVAS_DEPTH } from './vars';
 import { EdgeEvents, EdgeObject } from '../phaser/EdgeObject';
 import { getGraphSerialiser } from '../graph/InteractiveGraph';
+import { GraphEntityRendererImp } from '../phaser/GraphEntityRenderer';
 
 
 export class GraphCanvas extends Phaser.GameObjects.Container {
@@ -15,6 +16,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
     private edgeCreatingFrom: number;
     private moveLocked: boolean = false;
     private edgeCandidate: number | null = null;
+    private graphEntityRenderer: GraphEntityRendererImp;
 
     constructor(
         public scene: Scene,
@@ -27,6 +29,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
         super(scene, simX, simY);
         this.nodeObjects = new Map();
         this.edgeObjects = new Map();
+        this.graphEntityRenderer = new GraphEntityRendererImp(this.scene);
         this.setDepth(CANVAS_DEPTH);
         this.shiftKey = this.scene.input.keyboard!.addKey("SHIFT");
         this.setInteractive();
@@ -54,8 +57,18 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
             }
             const newNode = new NodeObject(this.scene, node.id, node.x, node.y);
             this.nodeObjects.set(node.id, newNode);
+            this.scene.data.set(`${node.id}-positioner`, newNode.positioner);
             this.scene.add.existing(newNode);
         }
+
+        this.graphEntityRenderer.initialiseEntity({
+            type: "node",
+            nodeID: 0
+        }, {
+            entityID: 0,
+            name: "blah",
+            moveSpeed: 1000
+        })
 
         this.registerEditorCallbacks();
     }
@@ -257,10 +270,10 @@ export class GraphScene extends Scene {
 
     public init(graph: InteractiveGraph) {
         this.graph = graph;
-        this.escapeKey = this.input.keyboard!.addKey("ESC");
     }
 
     public create() {
+        this.escapeKey = this.input.keyboard!.addKey("ESC");
         this.camera = this.cameras.main;
         this.camera.setBackgroundColor(BACKGROUND_BEIGE);
 

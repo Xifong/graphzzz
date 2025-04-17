@@ -1,5 +1,5 @@
 import { Scene } from "phaser";
-import { EDGE_DEPTH, GRAPHICS_STYLE } from "../scenes/vars";
+import { EDGE_DEPTH, GRAPH_GRAPHICS_STYLE } from "../scenes/vars";
 import { getPhaserPositionOf } from "../util";
 import { DEBUG_VISUALS } from "../vars";
 
@@ -12,7 +12,7 @@ export const EdgeEvents = {
 
 export class EdgeObject extends Phaser.GameObjects.Graphics {
     private hitboxPolygon: Phaser.Geom.Polygon | null = null;
-    private currentGraphicsStyle: Phaser.Types.GameObjects.Graphics.Options = JSON.parse(JSON.stringify(GRAPHICS_STYLE));
+    private currentGraphicsStyle: Phaser.Types.GameObjects.Graphics.Options = JSON.parse(JSON.stringify(GRAPH_GRAPHICS_STYLE));
 
     constructor(
         public scene: Scene,
@@ -23,7 +23,7 @@ export class EdgeObject extends Phaser.GameObjects.Graphics {
         public simEndY: number,
         public isInteractive: boolean = true,
     ) {
-        super(scene, GRAPHICS_STYLE);
+        super(scene, GRAPH_GRAPHICS_STYLE);
 
         this.setData("id", id);
         this.setName(`Edge '${this.id}'`);
@@ -62,7 +62,7 @@ export class EdgeObject extends Phaser.GameObjects.Graphics {
         this.on(
             Phaser.Input.Events.GAMEOBJECT_POINTER_OUT,
             () => {
-                this.currentGraphicsStyle = JSON.parse(JSON.stringify(GRAPHICS_STYLE));
+                this.currentGraphicsStyle = JSON.parse(JSON.stringify(GRAPH_GRAPHICS_STYLE));
                 this.drawEdge();
             }
         );

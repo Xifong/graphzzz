@@ -1,6 +1,7 @@
 import { Scene } from 'phaser';
 import { getPhaserPositionOf } from '../util';
-import { GRAPHICS_STYLE, NODE_RADIUS, NODE_DEPTH } from '../scenes/vars';
+import { GRAPH_GRAPHICS_STYLE, NODE_RADIUS, NODE_DEPTH, ENTITY_DEPTH, ENTITY_GRAPHICS_STYLE, ENTITY_RADIUS } from '../scenes/vars';
+import { EntityRenderData, NodeEntityPositioner } from './GraphEntityRenderer';
 
 export const NodeEvents = {
     REQUEST_DELETE: 'request-delete',
@@ -10,10 +11,52 @@ export const NodeEvents = {
     NOTIFY_STOP_EDGE_CANDIDATE: 'notify-stop-edge-candidate'
 };
 
+export class NodeEntityPositionerImp extends Phaser.GameObjects.Container implements NodeEntityPositioner {
+    private entityGraphics: Phaser.GameObjects.Graphics;
+    private entities: Map<number, EntityRenderData> = new Map();
+
+    constructor(
+        public scene: Scene,
+        public nodeBody: Phaser.Geom.Circle,
+    ) {
+        super(scene);
+
+        this.entityGraphics = this.scene.add.graphics(ENTITY_GRAPHICS_STYLE);
+        this.add(this.entityGraphics);
+    }
+
+    private renderEntities() {
+        this.entityGraphics.clear();
+        this.setDepth(ENTITY_DEPTH);
+
+        const points = this.nodeBody.getPoints(this.entities.size);
+        for (const [i, _] of this.entities.entries()) {
+            const point = points[i]
+            const circle = new Phaser.Geom.Circle(point.x * 2, point.y * 2, ENTITY_RADIUS);
+            this.entityGraphics.fillCircleShape(circle);
+            this.entityGraphics.strokeCircleShape(circle);
+        }
+    }
+
+    addEntity(entity: EntityRenderData): void {
+        this.entities.set(entity.entityID, entity);
+        this.renderEntities();
+    }
+
+    removeEntity(entityID: number): void {
+        if (!this.entities.has(entityID)) {
+            return;
+        }
+        this.entities.delete(entityID);
+        this.renderEntities();
+    }
+}
 
 export class NodeObject extends Phaser.GameObjects.Container {
     private graphics: Phaser.GameObjects.Graphics;
     private shiftKey: Phaser.Input.Keyboard.Key | null = null;
+    private nodeBody: Phaser.Geom.Circle;
+    public positioner: NodeEntityPositionerImp;
 
     constructor(
         public scene: Scene,
@@ -32,10 +75,13 @@ export class NodeObject extends Phaser.GameObjects.Container {
         this.setData("id", id);
         this.setName(`Node '${this.id}'`);
 
-        this.graphics = this.scene.add.graphics(GRAPHICS_STYLE);
+        this.graphics = this.scene.add.graphics(GRAPH_GRAPHICS_STYLE);
         this.add(this.graphics);
 
-        this.drawNode();
+
+        this.nodeBody = this.drawNode();
+        this.positioner = new NodeEntityPositionerImp(this.scene, this.nodeBody);
+        this.add(this.positioner);
 
         this.setSize(NODE_RADIUS * 2, NODE_RADIUS * 2);
         this.setInteractive(
@@ -85,12 +131,14 @@ export class NodeObject extends Phaser.GameObjects.Container {
         );
     }
 
-    private drawNode() {
+    private drawNode(): Phaser.Geom.Circle {
         this.graphics.clear();
-
         this.setDepth(NODE_DEPTH);
-        this.graphics.fillCircle(0, 0, NODE_RADIUS);
-        this.graphics.strokeCircle(0, 0, NODE_RADIUS);
+
+        const circle = new Phaser.Geom.Circle(0, 0, NODE_RADIUS);
+        this.graphics.fillCircleShape(circle);
+        this.graphics.strokeCircleShape(circle);
+        return circle;
     }
 
     public moveNodePosition(simX: number, simY: number) {
@@ -101,3 +149,5 @@ export class NodeObject extends Phaser.GameObjects.Container {
         this.drawNode();
     }
 }
+
+
