@@ -1,0 +1,1 @@
+- ID packing (i.e. nodes and edges should have no missing ids after serialisation)

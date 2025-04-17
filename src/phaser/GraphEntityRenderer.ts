@@ -1,5 +1,5 @@
 import { Scene } from "phaser";
-import { EntityPosition } from "../graph/GraphEntity";
+import { EntityPosition, NodePosition } from "../graph/GraphEntity";
 
 export type EntityRenderData = {
     entityID: number
@@ -39,9 +39,18 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
 
     initialiseEntity(entityPosition: EntityPosition, entity: EntityRenderData) {
         if (entityPosition.type === "node") {
-            const positioner = this.scene.data.get(`${entityPosition.nodeID}-positioner`);
-            positioner.addEntity(entity);
+            this.positionAtNode(entityPosition, entity);
         }
+    }
+
+    private positionAtNode(nodePosition: NodePosition, entity: EntityRenderData) {
+        if (!this.scene.data.has(`${nodePosition.nodeID}-positioner`)) {
+            return;
+        }
+
+        const positioner = this.scene.data.get(`${nodePosition.nodeID}-positioner`);
+        positioner.addEntity(entity);
+        this.entities.set(entity.entityID, entity);
     }
 }
 

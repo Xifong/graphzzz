@@ -70,6 +70,42 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
             moveSpeed: 1000
         })
 
+        this.graphEntityRenderer.initialiseEntity({
+            type: "node",
+            nodeID: 0
+        }, {
+            entityID: 1,
+            name: "blah",
+            moveSpeed: 1000
+        })
+
+        this.graphEntityRenderer.initialiseEntity({
+            type: "node",
+            nodeID: 5
+        }, {
+            entityID: 2,
+            name: "blah",
+            moveSpeed: 1000
+        })
+
+        this.graphEntityRenderer.initialiseEntity({
+            type: "node",
+            nodeID: 5
+        }, {
+            entityID: 3,
+            name: "blah",
+            moveSpeed: 1000
+        })
+
+        this.graphEntityRenderer.initialiseEntity({
+            type: "node",
+            nodeID: 5
+        }, {
+            entityID: 4,
+            name: "blah",
+            moveSpeed: 1000
+        })
+
         this.registerEditorCallbacks();
     }
 
