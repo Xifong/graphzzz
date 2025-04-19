@@ -1,9 +1,11 @@
 import { Scene } from "phaser";
 import { EntityPosition, EntityRenderData, GraphEntityPositioner, MovementPath, NodePosition } from "../graph/GraphEntity";
 import { GraphModificationEvent } from "../graph/types";
+import { ENTITY_DEPTH, ENTITY_GRAPHICS_STYLE, ENTITY_RADIUS } from "../scenes/vars";
+import { NodeObject } from "./NodeObject";
 
 export interface NodeEntityPositioner {
-    addEntity(entity: EntityRenderData): void
+    addEntity(entityID: number, renderEntity: (point: { x: number, y: number }, node: NodeObject) => void): void
     removeEntity(entityID: number): void
 }
 
@@ -47,9 +49,14 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
             return;
         }
 
-        const positioner = this.scene.data.get(`${nodePosition.nodeID}-positioner`);
-        positioner.addEntity(entityRenderData);
-        this.entities.set(entityRenderData.entityID, new EntityObject(this.scene, entityRenderData, nodePosition));
+        const positioner: NodeEntityPositioner = this.scene.data.get(`${nodePosition.nodeID}-positioner`);
+        const newEntity = new EntityObject(
+            this.scene,
+            entityRenderData,
+            nodePosition
+        )
+        this.entities.set(entityRenderData.entityID, newEntity);
+        positioner.addEntity(entityRenderData.entityID, newEntity.renderOntoNodePoint);
     }
 
     update(time: number, delta: number) {
@@ -76,16 +83,28 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
 }
 
 export class EntityObject extends Phaser.GameObjects.Container {
+    private entityGraphics: Phaser.GameObjects.Graphics;
+
     constructor(
         public scene: Scene,
         public renderData: EntityRenderData,
-        public entityPosition: EntityPosition
+        public entityPosition: EntityPosition,
     ) {
         super(scene);
+
+        this.entityGraphics = this.scene.add.graphics(ENTITY_GRAPHICS_STYLE);
+        this.add(this.entityGraphics);
     }
 
-    create() {
+    renderOntoNodePoint = (point: { x: number, y: number }, node: NodeObject) => {
+        node.add(this);
+        this.entityGraphics.clear();
+        this.setDepth(ENTITY_DEPTH);
 
+        this.entityGraphics.fillStyle(this.renderData.colour);
+        const circle = new Phaser.Geom.Circle(point.x * 2, point.y * 2, ENTITY_RADIUS);
+        this.entityGraphics.fillCircleShape(circle);
+        this.entityGraphics.strokeCircleShape(circle);
     }
 
     handleGraphModification(_: GraphModificationEvent) {

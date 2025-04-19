@@ -1,8 +1,7 @@
 import { Scene } from 'phaser';
 import { getPhaserPositionOf } from '../util';
-import { GRAPH_GRAPHICS_STYLE, NODE_RADIUS, NODE_DEPTH, ENTITY_DEPTH, ENTITY_GRAPHICS_STYLE, ENTITY_RADIUS } from '../scenes/vars';
-import { NodeEntityPositioner } from './GraphEntityRenderer';
-import { EntityRenderData } from '../graph/GraphEntity';
+import { GRAPH_GRAPHICS_STYLE, NODE_RADIUS, NODE_DEPTH } from '../scenes/vars';
+import { NodeEntityPositionerImp } from './NodeEntityPositioner';
 
 export const NodeEvents = {
     REQUEST_DELETE: 'request-delete',
@@ -11,50 +10,6 @@ export const NodeEvents = {
     NOTIFY_EDGE_CANDIDATE: 'notify-edge-candidate',
     NOTIFY_STOP_EDGE_CANDIDATE: 'notify-stop-edge-candidate'
 };
-
-export class NodeEntityPositionerImp extends Phaser.GameObjects.Container implements NodeEntityPositioner {
-    private entityGraphics: Phaser.GameObjects.Graphics;
-    private entities: Map<number, EntityRenderData> = new Map();
-
-    constructor(
-        public scene: Scene,
-        public nodeBody: Phaser.Geom.Circle,
-    ) {
-        super(scene);
-
-        this.entityGraphics = this.scene.add.graphics(ENTITY_GRAPHICS_STYLE);
-        this.add(this.entityGraphics);
-    }
-
-    private renderEntities() {
-        this.entityGraphics.clear();
-        this.setDepth(ENTITY_DEPTH);
-
-        const points = this.nodeBody.getPoints(this.entities.size);
-
-        const entityArray = Array.from(this.entities.values());
-        for (const [i, entity] of entityArray.entries()) {
-            const point = points[i];
-            this.entityGraphics.fillStyle(entity.colour);
-            const circle = new Phaser.Geom.Circle(point.x * 2, point.y * 2, ENTITY_RADIUS);
-            this.entityGraphics.fillCircleShape(circle);
-            this.entityGraphics.strokeCircleShape(circle);
-        }
-    }
-
-    addEntity(entity: EntityRenderData): void {
-        this.entities.set(entity.entityID, entity);
-        this.renderEntities();
-    }
-
-    removeEntity(entityID: number): void {
-        if (!this.entities.has(entityID)) {
-            return;
-        }
-        this.entities.delete(entityID);
-        this.renderEntities();
-    }
-}
 
 export class NodeObject extends Phaser.GameObjects.Container {
     private graphics: Phaser.GameObjects.Graphics;
@@ -84,7 +39,7 @@ export class NodeObject extends Phaser.GameObjects.Container {
 
 
         this.nodeBody = this.drawNode();
-        this.positioner = new NodeEntityPositionerImp(this.scene, this.nodeBody);
+        this.positioner = new NodeEntityPositionerImp(this.scene, this.nodeBody, this);
         this.add(this.positioner);
 
         this.setSize(NODE_RADIUS * 2, NODE_RADIUS * 2);

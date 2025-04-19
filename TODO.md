@@ -1,2 +1,4 @@
-- TODO next: move rendering from NodeObjectPositioner to EntityObject
+- TODO next: handle node moved
+- allow entities to transition to moving state
+- use tweens for entities moving between nodes
 - ID packing (i.e. nodes and edges should have no missing ids after serialisation)
