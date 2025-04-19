@@ -3,9 +3,10 @@ import { EntityPosition, EntityRenderData, GraphEntityPositioner, MovementPath, 
 import { GraphModificationEvent } from "../graph/types";
 import { ENTITY_DEPTH, ENTITY_GRAPHICS_STYLE, ENTITY_RADIUS } from "../scenes/vars";
 import { NodeObject } from "./NodeObject";
+import { SimPosition } from "../types";
 
 export interface NodeEntityPositioner {
-    addEntity(entityID: number, renderEntity: (point: { x: number, y: number }, node: NodeObject) => void): void
+    addEntity(entityID: number, renderEntity: (point: SimPosition, node: NodeObject) => void): void
     removeEntity(entityID: number): void
 }
 
@@ -96,7 +97,7 @@ export class EntityObject extends Phaser.GameObjects.Container {
         this.add(this.entityGraphics);
     }
 
-    renderOntoNodePoint = (point: { x: number, y: number }, node: NodeObject) => {
+    renderOntoNodePoint = (point: SimPosition, node: NodeObject) => {
         node.add(this);
         this.entityGraphics.clear();
         this.setDepth(ENTITY_DEPTH);

@@ -1,9 +1,10 @@
 import { Scene } from 'phaser';
 import { NodeEntityPositioner } from './GraphEntityRenderer';
 import { NodeObject } from './NodeObject';
+import { SimPosition } from '../types';
 
 export class NodeEntityPositionerImp extends Phaser.GameObjects.Container implements NodeEntityPositioner {
-    private entities: Map<number, (point: { x: number, y: number }, node: NodeObject) => void> = new Map();
+    private entities: Map<number, (point: SimPosition, node: NodeObject) => void> = new Map();
 
     constructor(
         public scene: Scene,
@@ -22,7 +23,7 @@ export class NodeEntityPositionerImp extends Phaser.GameObjects.Container implem
         }
     }
 
-    addEntity(entityID: number, entityRender: (point: { x: number, y: number }, node: NodeObject) => void): void {
+    addEntity(entityID: number, entityRender: (point: SimPosition, node: NodeObject) => void): void {
         this.entities.set(entityID, entityRender);
         this.renderEntities();
     }
