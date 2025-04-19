@@ -1,4 +1,5 @@
 import { SimPosition } from "../types"
+import { getDistinctEntityColours } from '../util/colours';
 
 export type NodePosition = {
     type: "node",
@@ -43,53 +44,27 @@ export function enactEntityDecisions(positioner: GraphEntityPositioner) {
         return
     }
 
-    positioner.initialiseEntity({
-        type: "node",
-        nodeID: 0
-    }, {
-        entityID: 0,
-        name: "blah",
-        moveSpeed: 1000,
-        colour: 0x1155AA,
-    })
+    // Get 5 distinct colors for our 5 entities
+    const colors = getDistinctEntityColours(5);
 
-    positioner.initialiseEntity({
-        type: "node",
-        nodeID: 0
-    }, {
-        entityID: 1,
-        name: "blah",
-        moveSpeed: 1000,
-        colour: 0x000000,
-    })
+    // Create entities with distinct colors
+    const entities = [
+        { nodeID: 0, entityID: 0 },
+        { nodeID: 0, entityID: 1 },
+        { nodeID: 5, entityID: 2 },
+        { nodeID: 5, entityID: 3 },
+        { nodeID: 5, entityID: 4 },
+    ];
 
-    positioner.initialiseEntity({
-        type: "node",
-        nodeID: 5
-    }, {
-        entityID: 2,
-        name: "blah",
-        moveSpeed: 1000,
-        colour: 0x000000,
-    })
-
-    positioner.initialiseEntity({
-        type: "node",
-        nodeID: 5
-    }, {
-        entityID: 3,
-        name: "blah",
-        moveSpeed: 1000,
-        colour: 0x000000,
-    })
-
-    positioner.initialiseEntity({
-        type: "node",
-        nodeID: 5
-    }, {
-        entityID: 4,
-        name: "blah",
-        moveSpeed: 1000,
-        colour: 0x000000,
-    })
+    entities.forEach((entity, index) => {
+        positioner.initialiseEntity({
+            type: "node",
+            nodeID: entity.nodeID
+        }, {
+            entityID: entity.entityID,
+            name: "blah",
+            moveSpeed: 1000,
+            colour: colors[index],
+        });
+    });
 }
