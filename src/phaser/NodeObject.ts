@@ -36,7 +36,6 @@ export class NodeEntityPositionerImp extends Phaser.GameObjects.Container implem
         for (const [i, entity] of entityArray.entries()) {
             const point = points[i];
             this.entityGraphics.fillStyle(entity.colour);
-            this.entityGraphics.lineStyle(this.entityGraphics.defaultStrokeWidth, entity.colour);
             const circle = new Phaser.Geom.Circle(point.x * 2, point.y * 2, ENTITY_RADIUS);
             this.entityGraphics.fillCircleShape(circle);
             this.entityGraphics.strokeCircleShape(circle);

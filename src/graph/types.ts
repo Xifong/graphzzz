@@ -9,7 +9,8 @@ export interface InteractiveGraph {
 
 
 export interface InteractiveGraphDeserialiser {
-    deserialise: (graphRepresentation: string) => InteractiveGraph;
+    deserialiseGraphOnly: (graphRepresentation: string) => Graph;
+    deserialiseWithPositions: (graphRepresentation: string) => InteractiveGraph;
 }
 
 export interface InteractiveGraphSerialiser {

@@ -3,7 +3,6 @@ const PALETTE = {
     BLUE: 0x2196F3,
     TEAL: 0x009688,
     GREEN: 0x4CAF50,
-    AMBER: 0xFFC107,
     ORANGE: 0xFF9800,
     RED: 0xF44336,
     PURPLE: 0x9C27B0,
@@ -11,7 +10,6 @@ const PALETTE = {
 
     // Accent colours for variety
     PINK: 0xE91E63,
-    LIME: 0xCDDC39,
     CYAN: 0x00BCD4,
     DEEP_PURPLE: 0x673AB7,
     LIGHT_BLUE: 0x03A9F4,

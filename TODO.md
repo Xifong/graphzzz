@@ -1,1 +1,2 @@
+- TODO next: move rendering from NodeObjectPositioner to EntityObject
 - ID packing (i.e. nodes and edges should have no missing ids after serialisation)

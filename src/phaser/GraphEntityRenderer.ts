@@ -12,7 +12,7 @@ class EntityRenderingError extends Error {
 
 export interface GraphEntityRenderer {
     update: (time: number, delta: number) => void;
-    setDecisionHandler: (handler: (positioner: GraphEntityPositioner) => void) => void;
+    setController: (handler: (positioner: GraphEntityPositioner) => void) => void;
 }
 
 export class GraphEntityRendererImp extends Phaser.GameObjects.Container implements GraphEntityPositioner, GraphEntityRenderer {
@@ -70,7 +70,7 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
         this.pendingEvents.push(event);
     }
 
-    setDecisionHandler(handler: (positioner: GraphEntityPositioner) => void) {
+    setController(handler: (positioner: GraphEntityPositioner) => void) {
         this.decisionHandler = handler;
     }
 }

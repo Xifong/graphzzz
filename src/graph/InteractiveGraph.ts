@@ -102,41 +102,50 @@ function getPositions(graphSchema: GraphDataSchema): NodePositions {
     return nodePositions;
 }
 
-function deserialise(graphData: unknown): InteractiveGraphImp {
-    const result = graphDataSchema.safeParse(graphData);
+export class GraphDeserialiser implements InteractiveGraphDeserialiser {
+    private graphData: GraphDataSchema;
+    private graph: Graph;
 
-    if (!result.success) {
-        throw new GraphDeserialisationError(`failed to validate graph data: ${result.error}`)
-    }
+    deserialiseGraphOnly(graphData: unknown): Graph {
+        if (!this.graph) {
+            const result = graphDataSchema.safeParse(graphData);
 
-    let largestNodeID = -1;
-    for (const node of result.data.nodes) {
-        if (node.id > largestNodeID) {
-            largestNodeID = node.id;
+            if (!result.success) {
+                throw new GraphDeserialisationError(`failed to validate graph data: ${result.error}`)
+            }
+
+            this.graphData = result.data;
+            this.graph = createGraph(this.graphData);
         }
+
+        return this.graph;
     }
 
+    deserialiseWithPositions(graphData: unknown): InteractiveGraph {
+        this.deserialiseGraphOnly(graphData);
 
-    let largestEdgeID = -1;
-    for (const edge of result.data.edges) {
-        if (edge.id > largestEdgeID) {
-            largestEdgeID = edge.id;
+        let largestNodeID = -1;
+        for (const node of this.graphData.nodes) {
+            if (node.id > largestNodeID) {
+                largestNodeID = node.id;
+            }
         }
-    }
 
-    return new InteractiveGraphImp(
-        createGraph(result.data), getPositions(result.data), largestNodeID + 1, largestEdgeID + 1
-    );
+        let largestEdgeID = -1;
+        for (const edge of this.graphData.edges) {
+            if (edge.id > largestEdgeID) {
+                largestEdgeID = edge.id;
+            }
+        }
+
+        return new InteractiveGraphImp(
+            this.graph, getPositions(this.graphData), largestNodeID + 1, largestEdgeID + 1
+        );
+    }
 }
 
 function serialise(graph: InteractiveGraph): string {
     return JSON.stringify(graph.getRenderData(), null, 4);
-}
-
-export function getGraphDeserialiser(): InteractiveGraphDeserialiser {
-    return {
-        deserialise: deserialise,
-    }
 }
 
 export function getGraphSerialiser(): InteractiveGraphSerialiser {

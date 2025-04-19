@@ -1,5 +1,6 @@
 import { SimPosition } from "../types"
 import { getDistinctEntityColours } from '../util/colours';
+import { Graph } from './types';
 
 export type NodePosition = {
     type: "node",
@@ -20,7 +21,6 @@ export type FreePosition = SimPosition & {
 
 export type EntityPosition = NodePosition | EdgePosition | FreePosition
 
-
 export type EntityRenderData = {
     entityID: number
     name: string
@@ -39,32 +39,34 @@ export interface GraphEntityPositioner {
     entityPositionOf: (entityID: number) => EntityPosition | null;
 }
 
-export function enactEntityDecisions(positioner: GraphEntityPositioner) {
-    if (positioner.entityPositionOf(0) !== null) {
-        return
+export class EntityController {
+    constructor(
+        private graph: Graph
+    ) {
+
     }
 
-    // Get 5 distinct colors for our 5 entities
-    const colors = getDistinctEntityColours(5);
+    public updateEntities = (positioner: GraphEntityPositioner) => {
+        if (positioner.entityPositionOf(0) !== null) {
+            return
+        }
 
-    // Create entities with distinct colors
-    const entities = [
-        { nodeID: 0, entityID: 0 },
-        { nodeID: 0, entityID: 1 },
-        { nodeID: 5, entityID: 2 },
-        { nodeID: 5, entityID: 3 },
-        { nodeID: 5, entityID: 4 },
-    ];
+        const nodeIDs: number[] = [...this.graph.iterableNodeCopy].map((node) => node.id);
 
-    entities.forEach((entity, index) => {
-        positioner.initialiseEntity({
-            type: "node",
-            nodeID: entity.nodeID
-        }, {
-            entityID: entity.entityID,
-            name: "blah",
-            moveSpeed: 1000,
-            colour: colors[index],
-        });
-    });
+        const entityNum = 40;
+        const colors = getDistinctEntityColours(entityNum);
+
+        for (let i = 0; i < entityNum; i++) {
+            positioner.initialiseEntity({
+                type: "node",
+                nodeID: nodeIDs[Math.floor(Math.random() * nodeIDs.length)],
+            }, {
+                entityID: i,
+                name: "blah",
+                moveSpeed: 1000,
+                colour: colors[i],
+            });
+        }
+    }
 }
+

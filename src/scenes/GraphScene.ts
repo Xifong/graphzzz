@@ -6,7 +6,7 @@ import { BACKGROUND_BEIGE, CANVAS_DEPTH } from './vars';
 import { EdgeEvents, EdgeObject } from '../phaser/EdgeObject';
 import { getGraphSerialiser } from '../graph/InteractiveGraph';
 import { GraphEntityRenderer, GraphEntityRendererImp } from '../phaser/GraphEntityRenderer';
-import { enactEntityDecisions } from '../graph/GraphEntity';
+import { EntityController } from '../graph/GraphEntity';
 
 
 export class GraphCanvas extends Phaser.GameObjects.Container {
@@ -254,13 +254,15 @@ export class GraphScene extends Scene {
     private graphCanvas: GraphCanvas;
     private escapeKey: Phaser.Input.Keyboard.Key;
     private graphEntityRenderer: GraphEntityRenderer;
+    private entityController: EntityController;
 
     constructor() {
         super('GraphScene');
     }
 
-    public init(graph: InteractiveGraph) {
+    public init({ graph, entityController }: { graph: InteractiveGraph, entityController: EntityController }) {
         this.graph = graph;
+        this.entityController = entityController;
     }
 
     public create() {
@@ -281,7 +283,8 @@ export class GraphScene extends Scene {
         this.graphCanvas.renderGraph();
 
         this.graphEntityRenderer = new GraphEntityRendererImp(this);
-        this.graphEntityRenderer.setDecisionHandler(enactEntityDecisions);
+
+        this.graphEntityRenderer.setController(this.entityController.updateEntities);
 
         this.registerTemporarySave();
     }

@@ -1,7 +1,7 @@
 import { Scene } from 'phaser';
 import { BACKGROUND_BEIGE } from './vars';
-import { getGraphDeserialiser } from '../graph/InteractiveGraph';
-import { InteractiveGraphDeserialiser } from '../graph/types';
+import { GraphDeserialiser } from '../graph/InteractiveGraph';
+import { EntityController } from '../graph/GraphEntity';
 
 export class Preloader extends Scene {
     constructor() {
@@ -26,9 +26,14 @@ export class Preloader extends Scene {
     create() {
         this.cameras.main.setBackgroundColor(BACKGROUND_BEIGE);
 
-        const graphDeserialiser: InteractiveGraphDeserialiser = getGraphDeserialiser();
-        // Probably will need to make this a Phaser global in future as more interactivity is added
-        const graph = graphDeserialiser.deserialise(this.cache.json.get("graph-2")); 
-        this.scene.start('GraphScene', graph);
+        const graphDeserialiser = new GraphDeserialiser();
+        const graphOnly = graphDeserialiser.deserialiseGraphOnly(this.cache.json.get("graph-2"));
+        const entityController = new EntityController(graphOnly);
+
+        const graphWithPositions = graphDeserialiser.deserialiseWithPositions(this.cache.json.get("graph-2"));
+        this.scene.start(
+            'GraphScene',
+            { graph: graphWithPositions, entityController: entityController }
+        );
     }
 }
