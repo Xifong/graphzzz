@@ -5,7 +5,8 @@ import { NodeEvents, NodeObject } from '../phaser/NodeObject';
 import { BACKGROUND_BEIGE, CANVAS_DEPTH } from './vars';
 import { EdgeEvents, EdgeObject } from '../phaser/EdgeObject';
 import { getGraphSerialiser } from '../graph/InteractiveGraph';
-import { GraphEntityRendererImp } from '../phaser/GraphEntityRenderer';
+import { GraphEntityRenderer, GraphEntityRendererImp } from '../phaser/GraphEntityRenderer';
+import { enactEntityDecisions } from '../graph/GraphEntity';
 
 
 export class GraphCanvas extends Phaser.GameObjects.Container {
@@ -16,7 +17,6 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
     private edgeCreatingFrom: number;
     private moveLocked: boolean = false;
     private edgeCandidate: number | null = null;
-    private graphEntityRenderer: GraphEntityRendererImp;
 
     constructor(
         public scene: Scene,
@@ -29,7 +29,6 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
         super(scene, simX, simY);
         this.nodeObjects = new Map();
         this.edgeObjects = new Map();
-        this.graphEntityRenderer = new GraphEntityRendererImp(this.scene);
         this.setDepth(CANVAS_DEPTH);
         this.shiftKey = this.scene.input.keyboard!.addKey("SHIFT");
         this.setInteractive();
@@ -60,51 +59,6 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
             this.scene.data.set(`${node.id}-positioner`, newNode.positioner);
             this.scene.add.existing(newNode);
         }
-
-        this.graphEntityRenderer.initialiseEntity({
-            type: "node",
-            nodeID: 0
-        }, {
-            entityID: 0,
-            name: "blah",
-            moveSpeed: 1000
-        })
-
-        this.graphEntityRenderer.initialiseEntity({
-            type: "node",
-            nodeID: 0
-        }, {
-            entityID: 1,
-            name: "blah",
-            moveSpeed: 1000
-        })
-
-        this.graphEntityRenderer.initialiseEntity({
-            type: "node",
-            nodeID: 5
-        }, {
-            entityID: 2,
-            name: "blah",
-            moveSpeed: 1000
-        })
-
-        this.graphEntityRenderer.initialiseEntity({
-            type: "node",
-            nodeID: 5
-        }, {
-            entityID: 3,
-            name: "blah",
-            moveSpeed: 1000
-        })
-
-        this.graphEntityRenderer.initialiseEntity({
-            type: "node",
-            nodeID: 5
-        }, {
-            entityID: 4,
-            name: "blah",
-            moveSpeed: 1000
-        })
 
         this.registerEditorCallbacks();
     }
@@ -299,6 +253,7 @@ export class GraphScene extends Scene {
     private camera: Phaser.Cameras.Scene2D.Camera;
     private graphCanvas: GraphCanvas;
     private escapeKey: Phaser.Input.Keyboard.Key;
+    private graphEntityRenderer: GraphEntityRenderer;
 
     constructor() {
         super('GraphScene');
@@ -323,9 +278,16 @@ export class GraphScene extends Scene {
             this.graph
         );
         this.add.existing(this.graphCanvas);
-
         this.graphCanvas.renderGraph();
+
+        this.graphEntityRenderer = new GraphEntityRendererImp(this);
+        this.graphEntityRenderer.setDecisionHandler(enactEntityDecisions);
+
         this.registerTemporarySave();
+    }
+
+    update(time: number, delta: number): void {
+        this.graphEntityRenderer.update(time, delta);
     }
 
     private registerTemporarySave() {

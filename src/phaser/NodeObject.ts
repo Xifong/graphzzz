@@ -1,7 +1,8 @@
 import { Scene } from 'phaser';
 import { getPhaserPositionOf } from '../util';
 import { GRAPH_GRAPHICS_STYLE, NODE_RADIUS, NODE_DEPTH, ENTITY_DEPTH, ENTITY_GRAPHICS_STYLE, ENTITY_RADIUS } from '../scenes/vars';
-import { EntityRenderData, NodeEntityPositioner } from './GraphEntityRenderer';
+import { NodeEntityPositioner } from './GraphEntityRenderer';
+import { EntityRenderData } from '../graph/GraphEntity';
 
 export const NodeEvents = {
     REQUEST_DELETE: 'request-delete',
@@ -32,8 +33,10 @@ export class NodeEntityPositionerImp extends Phaser.GameObjects.Container implem
         const points = this.nodeBody.getPoints(this.entities.size);
 
         const entityArray = Array.from(this.entities.values());
-        for (const [i, _] of entityArray.entries()) {
+        for (const [i, entity] of entityArray.entries()) {
             const point = points[i];
+            this.entityGraphics.fillStyle(entity.colour);
+            this.entityGraphics.lineStyle(this.entityGraphics.defaultStrokeWidth, entity.colour);
             const circle = new Phaser.Geom.Circle(point.x * 2, point.y * 2, ENTITY_RADIUS);
             this.entityGraphics.fillCircleShape(circle);
             this.entityGraphics.strokeCircleShape(circle);

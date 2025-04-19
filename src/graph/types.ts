@@ -51,3 +51,31 @@ export interface GraphRenderData {
         rightNodeID: number,
     }[],
 }
+
+export type GraphModificationEvent = {
+    type: 'NODE_DELETED';
+    nodeID: number;
+} | {
+    type: 'EDGE_DELETED';
+    edgeID: number;
+} | {
+    type: 'NODE_MOVED';
+    nodeID: number;
+    newX: number;
+    newY: number;
+} | {
+    type: 'NODE_ADDED';
+    nodeID: number;
+    x: number;
+    y: number;
+} | {
+    type: 'EDGE_ADDED';
+    edgeID: number;
+    fromNodeID: number;
+    toNodeID: number;
+};
+
+export interface GraphEventEmitter {
+    onGraphModification: (callback: (event: GraphModificationEvent) => void) => void;
+    offGraphModification: (callback: (event: GraphModificationEvent) => void) => void;
+}
