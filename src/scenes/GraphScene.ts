@@ -79,7 +79,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
             node.off(Phaser.Input.Events.DRAG);
             node.on(
                 Phaser.Input.Events.DRAG,
-                (_: Phaser.Input.Pointer, x: number, y: number) => {
+                (_pointer: Phaser.Input.Pointer, x: number, y: number) => {
                     const simPos = getSimPositionOf(x, y);
 
                     if (this.shiftKey.isDown) {
@@ -102,7 +102,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
             node.off(Phaser.Input.Events.DRAG_END);
             node.on(
                 Phaser.Input.Events.DRAG_END,
-                (_: Phaser.Input.Pointer, _2: Phaser.GameObjects.GameObject, _3: boolean) => {
+                (_pointer: Phaser.Input.Pointer, _gameObject: Phaser.GameObjects.GameObject, _dropped: boolean) => {
                     this.moveLocked = false;
 
                     if (this.isCreatingEdge) {
@@ -169,7 +169,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
         this.shiftKey.off(Phaser.Input.Keyboard.Events.UP);
         this.shiftKey.on(
             Phaser.Input.Keyboard.Events.UP,
-            (_: any) => {
+            (_event: Phaser.Input.Keyboard.Key) => {
                 if (!this.isCreatingEdge) {
                     return;
                 }
@@ -180,12 +180,12 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
                     this.cancelEdgeCreation();
                 }
             }
-        )
+        );
 
         this.off(Phaser.Input.Events.POINTER_DOWN);
         this.on(
             Phaser.Input.Events.POINTER_DOWN,
-            (pointer: Phaser.Input.Pointer, localX: number, localY: number, _2: any) => {
+            (pointer: Phaser.Input.Pointer, localX: number, localY: number, _event: Phaser.Types.Input.EventData) => {
                 if (pointer.rightButtonDown()) {
                     return;
                 }
@@ -198,7 +198,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
         this.off(Phaser.Input.Events.POINTER_UP);
         this.on(
             Phaser.Input.Events.POINTER_UP,
-            (_: Phaser.Input.Pointer, _1: number, _2: number, _3: any) => {
+            (_pointer: Phaser.Input.Pointer, _localX: number, _localY: number, _event: Phaser.Types.Input.EventData) => {
                 if (this.isCreatingEdge) {
                     this.cancelEdgeCreation();
                     return;
