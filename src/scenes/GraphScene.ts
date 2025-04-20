@@ -1,5 +1,5 @@
 import { Scene } from 'phaser';
-import { InteractiveGraph } from '../graph/types';
+import { GraphEventEmitter, GraphModificationEvent, InteractiveGraph } from '../graph/types';
 import { getPhaserRegionOf, getSimPositionOf } from '../util';
 import { NodeEvents, NodeObject } from '../phaser/NodeObject';
 import { BACKGROUND_BEIGE, CANVAS_DEPTH } from './vars';
@@ -79,7 +79,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
             node.off(Phaser.Input.Events.DRAG);
             node.on(
                 Phaser.Input.Events.DRAG,
-                (_: any, x: number, y: number) => {
+                (_: Phaser.Input.Pointer, x: number, y: number) => {
                     const simPos = getSimPositionOf(x, y);
 
                     if (this.shiftKey.isDown) {
@@ -102,7 +102,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
             node.off(Phaser.Input.Events.DRAG_END);
             node.on(
                 Phaser.Input.Events.DRAG_END,
-                (_: any, _2: number, _3: number) => {
+                (_: Phaser.Input.Pointer, _2: Phaser.GameObjects.GameObject, _3: boolean) => {
                     this.moveLocked = false;
 
                     if (this.isCreatingEdge) {
@@ -111,6 +111,8 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
                     }
 
                     // Refresh the node object to prevent positions possibly going out of sync
+                    const simPos = getSimPositionOf(node.x, node.y);
+                    this.graph.moveNodeTo(node.id, simPos.x, simPos.y);
                     this.nodeObjects.get(node.id)?.destroy();
                     this.nodeObjects.delete(node.id);
                     this.renderGraph();
@@ -249,7 +251,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
 }
 
 export class GraphScene extends Scene {
-    private graph: InteractiveGraph;
+    private graph: InteractiveGraph & GraphEventEmitter;
     private camera: Phaser.Cameras.Scene2D.Camera;
     private graphCanvas: GraphCanvas;
     private escapeKey: Phaser.Input.Keyboard.Key;
@@ -260,7 +262,7 @@ export class GraphScene extends Scene {
         super('GraphScene');
     }
 
-    public init({ graph, entityController }: { graph: InteractiveGraph, entityController: EntityController }) {
+    public init({ graph, entityController }: { graph: InteractiveGraph & GraphEventEmitter, entityController: EntityController }) {
         this.graph = graph;
         this.entityController = entityController;
     }
@@ -283,6 +285,12 @@ export class GraphScene extends Scene {
         this.graphCanvas.renderGraph();
 
         this.graphEntityRenderer = new GraphEntityRendererImp(this);
+
+        this.graph.onGraphModification(
+            (event: GraphModificationEvent) => {
+                this.graphEntityRenderer.queueGraphModification(event);
+            }
+        );
 
         this.graphEntityRenderer.setController(this.entityController.updateEntities);
 

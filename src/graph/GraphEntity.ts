@@ -3,19 +3,19 @@ import { getDistinctEntityColours } from '../util/colours';
 import { Graph } from './types';
 
 export type NodePosition = {
-    type: "node",
+    type: "ON_NODE",
     nodeID: number
 }
 
 export type EdgePosition = {
-    type: "edge",
+    type: "ON_EDGE",
     edgeID: number,
     toNodeID: number,
     progressRatio: number,
 }
 
 export type FreePosition = SimPosition & {
-    type: "free",
+    type: "FREE",
     toNodeID: number,
 }
 
@@ -58,7 +58,7 @@ export class EntityController {
 
         for (let i = 0; i < entityNum; i++) {
             positioner.initialiseEntity({
-                type: "node",
+                type: "ON_NODE",
                 nodeID: nodeIDs[Math.floor(Math.random() * nodeIDs.length)],
             }, {
                 entityID: i,

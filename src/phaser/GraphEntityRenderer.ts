@@ -16,6 +16,7 @@ class EntityRenderingError extends Error {
 export interface GraphEntityRenderer {
     update: (time: number, delta: number) => void;
     setController: (handler: (positioner: GraphEntityPositioner) => void) => void;
+    queueGraphModification: (event: GraphModificationEvent) => void;
 }
 
 export class GraphEntityRendererImp extends Phaser.GameObjects.Container implements GraphEntityPositioner, GraphEntityRenderer {
@@ -40,7 +41,7 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
             throw new EntityRenderingError(`could not create entity with id ${entity.entityID}, since it already exists`);
         }
 
-        if (entityPosition.type === "node") {
+        if (entityPosition.type === "ON_NODE") {
             this.positionAtNode(entityPosition, entity);
         }
     }
@@ -60,11 +61,38 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
         positioner.addEntity(entityRenderData.entityID, newEntity.renderOntoNodePoint);
     }
 
+    private reattachEntitiesToNode(nodeID: number) {
+        for (const entity of this.entities.values()) {
+            if (entity.entityPosition.type === "ON_NODE" && entity.entityPosition.nodeID === nodeID) {
+                this.positionAtNode(entity.entityPosition, entity.renderData);
+            }
+        }
+    }
+
+    private handleGraphModification(event: GraphModificationEvent) {
+        switch (event.type) {
+            case "NODE_DELETED":
+                console.log(`renderer handling NODE_DELETED`);
+                break;
+            case "EDGE_DELETED":
+                console.log(`renderer handling EDGE_DELETED`);
+                break;
+            case "NODE_MOVED":
+                console.log(`renderer handling NODE_MOVED`);
+                this.reattachEntitiesToNode(event.nodeID);
+                break;
+            case "NODE_ADDED":
+                console.log(`renderer handling NODE_ADDED`);
+                break;
+            case "EDGE_ADDED":
+                console.log(`renderer handling EDGE_ADDED`);
+                break;
+        }
+    }
+
     update(time: number, delta: number) {
         for (const event of this.pendingEvents) {
-            for (const entity of this.entities.values()) {
-                entity.handleGraphModification(event);
-            }
+            this.handleGraphModification(event);
         }
         this.pendingEvents = [];
 
@@ -74,7 +102,7 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
         }
     }
 
-    handleGraphModification(event: GraphModificationEvent) {
+    queueGraphModification = (event: GraphModificationEvent) => {
         this.pendingEvents.push(event);
     }
 
@@ -108,7 +136,23 @@ export class EntityObject extends Phaser.GameObjects.Container {
         this.entityGraphics.strokeCircleShape(circle);
     }
 
-    handleGraphModification(_: GraphModificationEvent) {
-        return
+    handleGraphModification(event: GraphModificationEvent) {
+        switch (event.type) {
+            case "NODE_DELETED":
+                console.log(`entity '${this.renderData.entityID}', handling NODE_DELETED`);
+                break;
+            case "EDGE_DELETED":
+                console.log(`entity '${this.renderData.entityID}', handling EDGE_DELETED`);
+                break;
+            case "NODE_MOVED":
+                console.log(`entity '${this.renderData.entityID}', handling NODE_MOVED`);
+                break;
+            case "NODE_ADDED":
+                console.log(`entity '${this.renderData.entityID}', handling NODE_ADDED`);
+                break;
+            case "EDGE_ADDED":
+                console.log(`entity '${this.renderData.entityID}', handling EDGE_ADDED`);
+                break;
+        }
     }
 }

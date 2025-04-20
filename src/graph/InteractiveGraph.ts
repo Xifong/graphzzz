@@ -1,4 +1,4 @@
-import { GraphRenderData, Graph, InteractiveGraph, InteractiveGraphDeserialiser, InteractiveGraphSerialiser } from './types';
+import { GraphRenderData, Graph, InteractiveGraph, InteractiveGraphDeserialiser, InteractiveGraphSerialiser, GraphEventEmitter, GraphModificationEvent } from './types';
 import { GraphImp } from '../graph/Graph';
 import { GRAPH_MAX_X, GRAPH_MAX_Y } from './vars';
 import { z } from "zod";
@@ -11,13 +11,19 @@ type NodePositions = Map<number, {
 
 class InteractiveGraphManipulationError extends Error { }
 
-export class InteractiveGraphImp implements InteractiveGraph {
+export class InteractiveGraphImp implements InteractiveGraph, GraphEventEmitter {
+    private graphModificationListener: (event: GraphModificationEvent) => void;
+
     constructor(
         private graph: Graph,
         private positions: NodePositions,
         private nextNodeID: number,
         private nextEdgeID: number
     ) {
+    }
+
+    private emitEvent(event: GraphModificationEvent) {
+        this.graphModificationListener(event);
     }
 
     moveNodeTo(id: number, x: number, y: number) {
@@ -31,20 +37,55 @@ export class InteractiveGraphImp implements InteractiveGraph {
             x: x,
             y: y
         });
+
+        this.emitEvent({
+            type: "NODE_MOVED",
+            nodeID: id,
+            newX: x,
+            newY: y,
+        });
     }
 
     connectNodeTo(fromID: number, toID: number) {
         this.graph.upsertEdge(this.nextEdgeID, fromID, toID);
-        this.nextEdgeID++;
+
+        this.emitEvent({
+            type: "EDGE_ADDED",
+            edgeID: this.nextEdgeID++,
+            fromNodeID: fromID,
+            toNodeID: toID,
+        });
     }
 
     deleteEdge(id: number): boolean {
-        return this.graph.deleteIfExistsEdge(id);
+        const wasDeleted = this.graph.deleteIfExistsEdge(id);
+        if (wasDeleted) {
+            this.emitEvent({
+                type: "EDGE_DELETED",
+                edgeID: id,
+            });
+        }
+        return wasDeleted;
     }
 
     deleteNode(id: number): boolean {
-        this.positions.delete(id);
-        return this.graph.deleteIfExistsNode(id);
+        const wasDeletedFromPositions = this.positions.delete(id);
+        const wasDeletedFromGraph = this.graph.deleteIfExistsNode(id);
+
+        if (wasDeletedFromGraph !== wasDeletedFromGraph) {
+            throw new InteractiveGraphManipulationError(
+                `corrupt state while deleting node '${id}', this id was in positions: '${wasDeletedFromPositions}', but this id was in grap: '${wasDeletedFromGraph}'`
+            );
+        }
+
+        if (wasDeletedFromGraph) {
+            this.emitEvent({
+                type: "NODE_DELETED",
+                nodeID: id,
+            });
+        }
+
+        return wasDeletedFromGraph;
     }
 
     placeNodeAt(x: number, y: number) {
@@ -54,7 +95,13 @@ export class InteractiveGraphImp implements InteractiveGraph {
             x: x,
             y: y
         });
-        this.nextNodeID++;
+
+        this.emitEvent({
+            type: "NODE_ADDED",
+            nodeID: this.nextNodeID++,
+            x: x,
+            y: y,
+        });
     }
 
     getRenderData(): GraphRenderData {
@@ -64,6 +111,10 @@ export class InteractiveGraphImp implements InteractiveGraph {
                 (edge) => ({ id: edge.id, leftNodeID: edge.leftNode.id, rightNodeID: edge.rightNode.id })
             ),
         }
+    }
+
+    onGraphModification(handler: (event: GraphModificationEvent) => void) {
+        this.graphModificationListener = handler;
     }
 }
 

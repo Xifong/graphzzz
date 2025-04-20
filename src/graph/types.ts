@@ -53,6 +53,10 @@ export interface GraphRenderData {
     }[],
 }
 
+export interface GraphEventEmitter {
+    onGraphModification: (callback: (event: GraphModificationEvent) => void) => void;
+}
+
 export type GraphModificationEvent = {
     type: 'NODE_DELETED';
     nodeID: number;
@@ -75,8 +79,3 @@ export type GraphModificationEvent = {
     fromNodeID: number;
     toNodeID: number;
 };
-
-export interface GraphEventEmitter {
-    onGraphModification: (callback: (event: GraphModificationEvent) => void) => void;
-    offGraphModification: (callback: (event: GraphModificationEvent) => void) => void;
-}
