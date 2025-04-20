@@ -1,6 +1,7 @@
 import { SimPosition } from "../types"
+import { randomFrom } from "../util";
 import { getDistinctEntityColours } from '../util/colours';
-import { Graph } from './types';
+import { Graph, GraphNode } from './types';
 
 export type NodePosition = {
     type: "ON_NODE",
@@ -24,9 +25,11 @@ export type EntityPosition = NodePosition | EdgePosition | FreePosition
 export type EntityRenderData = {
     entityID: number
     name: string
-    moveSpeed: number
+    simMoveSpeed: number
     colour: number
 }
+
+type Entity = EntityPosition & EntityRenderData;
 
 export type MovementPath = {
     edgeID: number
@@ -40,10 +43,25 @@ export interface GraphEntityPositioner {
 }
 
 export class EntityController {
+    private entities: Map<number, Entity> = new Map();
+
     constructor(
         private graph: Graph
     ) {
 
+    }
+
+    private moveRandomEntityToAdjacentNode(positioner: GraphEntityPositioner) {
+        const entitiesOnNodes: Entity[] = Array.from(this.entities.values()).filter((position: EntityPosition) => position.type == "ON_NODE");
+        const entity: Entity = randomFrom(entitiesOnNodes);
+
+        const currentNodeID = (entity as NodePosition).nodeID;
+        const neighbours = this.graph.neighboursOf(currentNodeID);
+
+        const moveTo = randomFrom(neighbours);
+        const edgeToUse = this.graph.connectionBeteen(currentNodeID, moveTo.id);
+
+        positioner.moveEntityToNode(moveTo.id, { edgeID: edgeToUse.id }, entity);
     }
 
     public updateEntities = (positioner: GraphEntityPositioner) => {
@@ -57,14 +75,20 @@ export class EntityController {
         const colors = getDistinctEntityColours(entityNum);
 
         for (let i = 0; i < entityNum; i++) {
-            positioner.initialiseEntity({
+            const position: NodePosition = {
                 type: "ON_NODE",
                 nodeID: nodeIDs[Math.floor(Math.random() * nodeIDs.length)],
-            }, {
+            }
+            const renderData: EntityRenderData = {
                 entityID: i,
                 name: "blah",
-                moveSpeed: 1000,
+                simMoveSpeed: 1000,
                 colour: colors[i],
+            }
+            positioner.initialiseEntity(position, renderData);
+            this.entities.set(i, {
+                ...position,
+                ...renderData
             });
         }
     }

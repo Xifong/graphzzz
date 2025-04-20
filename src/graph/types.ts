@@ -38,6 +38,9 @@ export interface Graph {
     upsertEdge: (id: number, leftNodeID: number, rightNodeID: number) => GraphEdge;
     deleteIfExistsNode: (id: number) => boolean;
     deleteIfExistsEdge: (id: number) => boolean;
+
+    neighboursOf: (id: number) => GraphNode[];
+    connectionBeteen: (nodeID: number, otherNodeID: number) => GraphEdge;
 }
 
 export interface GraphRenderData {

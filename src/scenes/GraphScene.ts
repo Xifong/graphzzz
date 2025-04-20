@@ -47,6 +47,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
 
             const newEdge = new EdgeObject(this.scene, edge.id, leftNode.x, leftNode.y, rightNode.x, rightNode.y);
             this.edgeObjects.set(edge.id, newEdge);
+            this.scene.data.set(`${edge.id}-edge-positioner`, newEdge.positioner);
             this.scene.add.existing(newEdge);
         }
 
@@ -56,7 +57,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
             }
             const newNode = new NodeObject(this.scene, node.id, node.x, node.y);
             this.nodeObjects.set(node.id, newNode);
-            this.scene.data.set(`${node.id}-positioner`, newNode.positioner);
+            this.scene.data.set(`${node.id}-node-positioner`, newNode.positioner);
             this.scene.add.existing(newNode);
         }
 

@@ -15,7 +15,7 @@ export function getPhaserRegionOf(x: number, y: number, width: number, height: n
     if (width <= 0 || height <= 0) {
         throw new Error("width and height must be positive numbers");
     }
-    
+
     const position = getPhaserPositionOf(x, y);
     return {
         ...position,
@@ -50,4 +50,21 @@ export function getSimPositionOf(x: number, y: number): SimPosition {
     };
 }
 
+export function distanceBetween(pointA: { x: number, y: number }, pointB: { x: number, y: number }): number {
+    return Math.sqrt((pointA.x - pointB.x) ** 2 + (pointA.y - pointB.y) ** 2);
+}
 
+export function getPhaserDuration(pointA: PhaserPosition, simSpeed: number, pointB: PhaserPosition): number {
+    const simPointA = getSimPositionOf(pointA.x, pointA.y);
+    const simPointB = getSimPositionOf(pointB.x, pointB.y);
+
+    const simDistance = distanceBetween(simPointA, simPointB);
+
+    // * 4 so that a speed of 100 translates to 25 simdist/s
+    // 25 simdist/s means traversing a graph in roughly 1 minute
+    return (simDistance * 4) / simSpeed;
+}
+
+export function randomFrom<T>(array: T[]): T {
+    return array[Math.floor(Math.random() * array.length)];
+}

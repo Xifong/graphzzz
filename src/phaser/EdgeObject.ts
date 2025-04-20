@@ -2,6 +2,7 @@ import { Scene } from "phaser";
 import { EDGE_DEPTH, GRAPH_GRAPHICS_STYLE } from "../scenes/vars";
 import { getPhaserPositionOf } from "../util";
 import { DEBUG_VISUALS } from "../vars";
+import { EdgeEntityPositionerImp } from "./EdgeEntityPositioner";
 
 const HITBOX_THICKNESS = 20;
 
@@ -10,9 +11,11 @@ export const EdgeEvents = {
 };
 
 
-export class EdgeObject extends Phaser.GameObjects.Graphics {
+export class EdgeObject extends Phaser.GameObjects.Container {
+    private graphics: Phaser.GameObjects.Graphics;
     private hitboxPolygon: Phaser.Geom.Polygon | null = null;
     private currentGraphicsStyle: Phaser.Types.GameObjects.Graphics.Options = JSON.parse(JSON.stringify(GRAPH_GRAPHICS_STYLE));
+    public positioner: EdgeEntityPositionerImp;
 
     constructor(
         public scene: Scene,
@@ -23,7 +26,10 @@ export class EdgeObject extends Phaser.GameObjects.Graphics {
         public simEndY: number,
         public isInteractive: boolean = true,
     ) {
-        super(scene, GRAPH_GRAPHICS_STYLE);
+        super(scene);
+
+        this.graphics = this.scene.add.graphics(GRAPH_GRAPHICS_STYLE);
+        this.setDepth(EDGE_DEPTH);
 
         this.setData("id", id);
         this.setName(`Edge '${this.id}'`);
@@ -32,6 +38,13 @@ export class EdgeObject extends Phaser.GameObjects.Graphics {
             this.hitboxPolygon = this.getHitbox();
         }
         this.drawEdge();
+        this.positioner = new EdgeEntityPositionerImp(
+            this.scene,
+            { x: simStartX, y: simStartY },
+            this,
+            { x: simEndX, y: simEndY }
+        );
+        this.add(this.positioner);
 
         if (this.hitboxPolygon) {
             this.setInteractive(
@@ -70,8 +83,8 @@ export class EdgeObject extends Phaser.GameObjects.Graphics {
         const points = this.hitboxPolygon?.getPoints(100);
         if (points && DEBUG_VISUALS) {
             for (const point of points) {
-                this.fillStyle(0xff0000);
-                this.fillPoint(point.x, point.y, 10);
+                this.graphics.fillStyle(0xff0000);
+                this.graphics.fillPoint(point.x, point.y, 10);
             }
         }
     }
@@ -87,14 +100,17 @@ export class EdgeObject extends Phaser.GameObjects.Graphics {
         );
     }
 
-
     private drawEdge() {
-        this.clear();
-        this.setDefaultStyles(this.currentGraphicsStyle);
+        this.graphics.clear();
+        this.graphics.setDefaultStyles(this.currentGraphicsStyle);
         const phaserPositionStart = getPhaserPositionOf(this.simStartX, this.simStartY);
         const phaserPositionEnd = getPhaserPositionOf(this.simEndX, this.simEndY);
-        this.lineBetween(phaserPositionStart.x, phaserPositionStart.y, phaserPositionEnd.x, phaserPositionEnd.y);
-        this.setDepth(EDGE_DEPTH);
+        this.graphics.lineBetween(phaserPositionStart.x, phaserPositionStart.y, phaserPositionEnd.x, phaserPositionEnd.y);
+        this.graphics.setDepth(EDGE_DEPTH);
+    }
+
+    preDestroy(_scene?: boolean): void {
+        this.graphics.clear();
     }
 }
 
