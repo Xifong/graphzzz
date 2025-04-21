@@ -1,6 +1,7 @@
 import { Graph, GraphNode, GraphEdge } from './types';
 
 class GraphManipulationError extends Error { }
+class GraphQueryError extends Error { }
 
 export class GraphIterables<T> implements Iterable<T> {
     constructor(
@@ -122,5 +123,46 @@ export class GraphImp implements Graph {
 
     get iterableEdgeCopy(): Iterable<GraphEdge> {
         return new GraphIterables<GraphEdge>(this.edges);
+    }
+
+    neighboursOf(id: number): GraphNode[] {
+        const node = this.nodes.get(id);
+
+        if (node === undefined) {
+            return [];
+        }
+
+        return node.edges.map((edge) => {
+            if (edge.leftNode.id !== id) {
+                return edge.leftNode
+            }
+            return edge.rightNode;
+        });
+
+    }
+
+    connectionBeteen(nodeID: number, otherNodeID: number): GraphEdge | null {
+        const node = this.nodes.get(nodeID);
+
+        if (node === undefined) {
+            throw new GraphQueryError(
+                `cannot get connection between nodes '${nodeID}', '${otherNodeID}' because '${nodeID}' does not exist`
+            );
+        }
+
+        const connecting = node.edges.filter((edge) => {
+            return (edge.leftNode.id === nodeID && edge.rightNode.id === otherNodeID) ||
+                (edge.rightNode.id === nodeID && edge.leftNode.id === otherNodeID)
+        })
+
+        if (connecting.length < 1) {
+            return null;
+        }
+
+        if (connecting.length > 1) {
+            throw new GraphQueryError(`found '${connecting.length}' connections between nodes '${nodeID}' and '${otherNodeID}'`);
+        }
+
+        return connecting[0];
     }
 }

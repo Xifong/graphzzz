@@ -28,8 +28,6 @@ export interface GraphEntityRenderer {
 }
 
 export class GraphEntityRendererImp extends Phaser.GameObjects.Container implements GraphEntityPositioner, GraphEntityRenderer {
-    moveEntityToNode: (nodeID: number, movementPath: MovementPath, entity: EntityRenderData) => EntityPosition;
-
     private pendingEvents: GraphModificationEvent[] = [];
     private entities: Map<number, EntityObject> = new Map();
     private decisionHandler: (positioner: GraphEntityPositioner) => void;
@@ -59,6 +57,28 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
             case "FREE":
         }
     }
+
+    moveEntityToNode(nodeID: number, movementPath: MovementPath, entityRenderData: EntityRenderData) {
+        const entity = this.entities.get(entityRenderData.entityID);
+
+        if (entity === undefined) {
+            return;
+        }
+        if (movementPath === null) {
+            return;
+        }
+
+        const edgePosition: EdgePosition = {
+            type: "ON_EDGE",
+            edgeID: movementPath.edgeID,
+            toNodeID: nodeID,
+            progressRatio: 0,
+
+        };
+
+        this.positionAtEdge(edgePosition, entityRenderData);
+    }
+
 
     private upsertEntityObject(position: EntityPosition, entityRenderData: EntityRenderData): EntityObject {
         const newEntity = new EntityObject(
@@ -170,29 +190,35 @@ export class EntityObject extends Phaser.GameObjects.Container {
     private renderOnto(point: PhaserPosition) {
         this.entityGraphics.clear();
         this.setDepth(ENTITY_DEPTH);
+        this.entityGraphics.setPosition(point.x, point.y);
 
         this.entityGraphics.fillStyle(this.renderData.colour);
-        const circle = new Phaser.Geom.Circle(point.x * 2, point.y * 2, ENTITY_RADIUS);
+        const circle = new Phaser.Geom.Circle(0, 0, ENTITY_RADIUS);
         this.entityGraphics.fillCircleShape(circle);
         this.entityGraphics.strokeCircleShape(circle);
     }
 
     renderOntoNodePoint = (point: PhaserPosition, node: NodeObject) => {
         node.add(this);
-        this.renderOnto(point);
+        // multiply by 2 to double the render twice the radius away from the node centre
+        // points used here are relative to the node centre
+        this.renderOnto({ x: point.x * 2, y: point.y * 2 });
     }
 
-    renderOntoEdgeSide = (startPoint: PhaserPosition, edge: EdgeObject, endPoint: PhaserPosition) => {
-        edge.add(this);
+    renderOntoEdgeSide = (startPoint: PhaserPosition, _edge: EdgeObject, endPoint: PhaserPosition) => {
+        this.scene.add.existing(this);
+        // points used here are absolute
         this.renderOnto(startPoint);
+
         this.scene.tweens.add({
-            targets: this,
+            targets: this.entityGraphics,
             x: endPoint.x,
             y: endPoint.y,
-            duration: getPhaserDuration(startPoint, this.renderData.simMoveSpeed, endPoint),
-            ease: 'Quad.easeOut',
+            duration: getPhaserDuration(startPoint, this.renderData.simMoveSpeed, endPoint) * 1000,
+            ease: 'Linear',
             onComplete: () => {
-                // something to manage lifecycle of tween? 
+                // something to manage lifecycle of tween?
+                console.log(`finished at (${this.x},${this.y})`);
             }
         })
     }

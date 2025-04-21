@@ -60,9 +60,9 @@ export function getPhaserDuration(pointA: PhaserPosition, simSpeed: number, poin
 
     const simDistance = distanceBetween(simPointA, simPointB);
 
-    // * 4 so that a speed of 100 translates to 25 simdist/s
-    // 25 simdist/s means traversing a graph in roughly 1 minute
-    return (simDistance * 4) / simSpeed;
+    // * 2 so that a speed of 100 translates to 50 simdist/s
+    // 50 simdist/s means traversing a graph in roughly 30s
+    return (simDistance * 2) / simSpeed;
 }
 
 export function randomFrom<T>(array: T[]): T {

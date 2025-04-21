@@ -40,7 +40,7 @@ export interface Graph {
     deleteIfExistsEdge: (id: number) => boolean;
 
     neighboursOf: (id: number) => GraphNode[];
-    connectionBeteen: (nodeID: number, otherNodeID: number) => GraphEdge;
+    connectionBeteen: (nodeID: number, otherNodeID: number) => GraphEdge | null;
 }
 
 export interface GraphRenderData {

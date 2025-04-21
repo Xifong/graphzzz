@@ -1,7 +1,7 @@
 import { SimPosition } from "../types"
 import { randomFrom } from "../util";
 import { getDistinctEntityColours } from '../util/colours';
-import { Graph, GraphNode } from './types';
+import { Graph } from './types';
 
 export type NodePosition = {
     type: "ON_NODE",
@@ -38,12 +38,15 @@ export type MovementPath = {
 
 export interface GraphEntityPositioner {
     initialiseEntity: (entityPosition: EntityPosition, entity: EntityRenderData) => void;
-    moveEntityToNode: (nodeID: number, movementPath: MovementPath, entity: EntityRenderData) => EntityPosition;
+    moveEntityToNode: (nodeID: number, movementPath: MovementPath, entity: EntityRenderData) => void;
     entityPositionOf: (entityID: number) => EntityPosition | null;
 }
 
+class EntityCreationError extends Error { }
+
 export class EntityController {
     private entities: Map<number, Entity> = new Map();
+    private moved: boolean = false;
 
     constructor(
         private graph: Graph
@@ -52,7 +55,8 @@ export class EntityController {
     }
 
     private moveRandomEntityToAdjacentNode(positioner: GraphEntityPositioner) {
-        const entitiesOnNodes: Entity[] = Array.from(this.entities.values()).filter((position: EntityPosition) => position.type == "ON_NODE");
+        const entitiesOnNodes: Entity[] =
+            Array.from(this.entities.values()).filter((position: EntityPosition) => position.type == "ON_NODE");
         const entity: Entity = randomFrom(entitiesOnNodes);
 
         const currentNodeID = (entity as NodePosition).nodeID;
@@ -61,17 +65,25 @@ export class EntityController {
         const moveTo = randomFrom(neighbours);
         const edgeToUse = this.graph.connectionBeteen(currentNodeID, moveTo.id);
 
+        if (edgeToUse === null) {
+            throw new EntityCreationError("could not move random entity because inconsistency between graph.connectionBeteen and graph.neighboursOf found");
+        }
+
         positioner.moveEntityToNode(moveTo.id, { edgeID: edgeToUse.id }, entity);
     }
 
     public updateEntities = (positioner: GraphEntityPositioner) => {
         if (positioner.entityPositionOf(0) !== null) {
+            if (!this.moved) {
+                this.moveRandomEntityToAdjacentNode(positioner);
+                this.moved = true;
+            }
             return
         }
 
         const nodeIDs: number[] = [...this.graph.iterableNodeCopy].map((node) => node.id);
 
-        const entityNum = 40;
+        const entityNum = 5;
         const colors = getDistinctEntityColours(entityNum);
 
         for (let i = 0; i < entityNum; i++) {
@@ -82,7 +94,7 @@ export class EntityController {
             const renderData: EntityRenderData = {
                 entityID: i,
                 name: "blah",
-                simMoveSpeed: 1000,
+                simMoveSpeed: 100,
                 colour: colors[i],
             }
             positioner.initialiseEntity(position, renderData);
