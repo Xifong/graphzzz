@@ -7,6 +7,7 @@ import { EdgeEvents, EdgeObject } from '../phaser/EdgeObject';
 import { getGraphSerialiser } from '../graph/InteractiveGraph';
 import { GraphEntityRenderer, GraphEntityRendererImp } from '../phaser/GraphEntityRenderer';
 import { EntityController } from '../graph/GraphEntity';
+import { getNodePositioner } from '../util/positioners';
 
 
 export class GraphCanvas extends Phaser.GameObjects.Container {
@@ -45,9 +46,8 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
             const leftNode = graphRenderData.nodes.filter((n) => n.id === edge.leftNodeID)[0];
             const rightNode = graphRenderData.nodes.filter((n) => n.id === edge.rightNodeID)[0];
 
-            const newEdge = new EdgeObject(this.scene, edge.id, leftNode.x, leftNode.y, rightNode.x, rightNode.y);
+            const newEdge = new EdgeObject(this.scene, edge.id, leftNode.x, leftNode.y, leftNode.id, rightNode.x, rightNode.y, rightNode.id);
             this.edgeObjects.set(edge.id, newEdge);
-            this.scene.data.set(`${edge.id}-edge-positioner`, newEdge.positioner);
             this.scene.add.existing(newEdge);
         }
 
@@ -57,7 +57,6 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
             }
             const newNode = new NodeObject(this.scene, node.id, node.x, node.y);
             this.nodeObjects.set(node.id, newNode);
-            this.scene.data.set(`${node.id}-node-positioner`, newNode.positioner);
             this.scene.add.existing(newNode);
         }
 
@@ -223,7 +222,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
     private continueEdgeCreation(fromPosition: { x: number, y: number }, toPosition: { x: number, y: number }) {
         this.deleteEdgePreview();
 
-        const newEdge = new EdgeObject(this.scene, -1, fromPosition.x, fromPosition.y, toPosition.x, toPosition.y, false);
+        const newEdge = new EdgeObject(this.scene, -1, fromPosition.x, fromPosition.y, -1, toPosition.x, toPosition.y, -1, false);
         this.edgeObjects.set(-1, newEdge);
         this.scene.add.existing(newEdge);
     }

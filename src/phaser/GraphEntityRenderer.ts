@@ -1,11 +1,11 @@
 import { Scene } from "phaser";
 import { EdgePosition, EntityPosition, EntityRenderData, GraphEntityPositioner, MovementPath, NodePosition } from "../graph/GraphEntity";
 import { GraphModificationEvent } from "../graph/types";
-import { ENTITY_DEPTH, ENTITY_GRAPHICS_STYLE, ENTITY_RADIUS } from "../scenes/vars";
 import { NodeObject } from "./NodeObject";
 import { PhaserPosition } from "../types";
 import { EdgeObject } from "./EdgeObject";
-import { getPhaserDuration } from "../util";
+import { EntityObject, TweenCompletionEvent } from "./EntityObject";
+import { getEdgePositioner, getNodePositioner } from "../util/positioners";
 
 export interface NodeEntityPositioner {
     addEntity(entityID: number, renderEntity: (point: PhaserPosition, node: NodeObject) => void): void
@@ -28,7 +28,8 @@ export interface GraphEntityRenderer {
 }
 
 export class GraphEntityRendererImp extends Phaser.GameObjects.Container implements GraphEntityPositioner, GraphEntityRenderer {
-    private pendingEvents: GraphModificationEvent[] = [];
+    private pendingGraphEvents: GraphModificationEvent[] = [];
+    private pendingTweenEvents: TweenCompletionEvent[] = [];
     private entities: Map<number, EntityObject> = new Map();
     private decisionHandler: (positioner: GraphEntityPositioner) => void;
 
@@ -73,18 +74,17 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
             edgeID: movementPath.edgeID,
             toNodeID: nodeID,
             progressRatio: 0,
-
         };
 
         this.positionAtEdge(edgePosition, entityRenderData);
     }
 
-
     private upsertEntityObject(position: EntityPosition, entityRenderData: EntityRenderData): EntityObject {
         const newEntity = new EntityObject(
             this.scene,
             entityRenderData,
-            position
+            position,
+            this.queueTweencompletion,
         );
 
         if (this.entities.has(entityRenderData.entityID)) {
@@ -96,7 +96,7 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
     }
 
     private positionAtEdge(edgePosition: EdgePosition, entityRenderData: EntityRenderData) {
-        if (!this.scene.data.has(`${edgePosition.edgeID}-edge-positioner`)) {
+        if (!this.scene.data.has(getEdgePositioner(edgePosition.edgeID, edgePosition.toNodeID))) {
             throw new EntityRenderingError(
                 `could not render entity with id '${entityRenderData.entityID}' on edge '${edgePosition.edgeID}', ` +
                 `since no edge positioner was found for this edge`
@@ -105,12 +105,12 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
 
         const newEntity = this.upsertEntityObject(edgePosition, entityRenderData);
 
-        const positioner: EdgeEntityPositioner = this.scene.data.get(`${edgePosition.edgeID}-edge-positioner`);
+        const positioner: EdgeEntityPositioner = this.scene.data.get(getEdgePositioner(edgePosition.edgeID, edgePosition.toNodeID));
         positioner.addEntity(entityRenderData.entityID, newEntity.renderOntoEdgeSide);
     }
 
     private positionAtNode(nodePosition: NodePosition, entityRenderData: EntityRenderData) {
-        if (!this.scene.data.has(`${nodePosition.nodeID}-node-positioner`)) {
+        if (!this.scene.data.has(getNodePositioner(nodePosition.nodeID))) {
             throw new EntityRenderingError(
                 `could not render entity with id '${entityRenderData.entityID}' at node '${nodePosition.nodeID}', ` +
                 `since no node positioner was found for this node`
@@ -119,7 +119,7 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
 
         const newEntity = this.upsertEntityObject(nodePosition, entityRenderData);
 
-        const positioner: NodeEntityPositioner = this.scene.data.get(`${nodePosition.nodeID}-node-positioner`);
+        const positioner: NodeEntityPositioner = this.scene.data.get(getNodePositioner(nodePosition.nodeID));
         positioner.addEntity(entityRenderData.entityID, newEntity.renderOntoNodePoint);
     }
 
@@ -152,11 +152,45 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
         }
     }
 
+    private attachEntityToDestinationNode(entityID: number) {
+        const entity = this.entities.get(entityID);
+
+        if (entity === undefined) {
+            return;
+        }
+
+        const entityEdgePosition = entity.entityPosition;
+        if (entityEdgePosition.type !== "ON_EDGE") {
+            return;
+        }
+
+        const position: NodePosition = {
+            type: "ON_NODE",
+            nodeID: entityEdgePosition.toNodeID,
+        }
+
+        this.positionAtNode(position, entity.renderData);
+    }
+
+    private handleTweenCompletion(event: TweenCompletionEvent) {
+        switch (event.type) {
+            case "MOVE_COMPLETE":
+                console.log(`renderer handling MOVE_COMPLETE`);
+                this.attachEntityToDestinationNode(event.entityID);
+                break;
+        }
+    }
+
     update(time: number, delta: number) {
-        for (const event of this.pendingEvents) {
+        for (const event of this.pendingTweenEvents) {
+            this.handleTweenCompletion(event);
+        }
+        this.pendingTweenEvents = [];
+
+        for (const event of this.pendingGraphEvents) {
             this.handleGraphModification(event);
         }
-        this.pendingEvents = [];
+        this.pendingGraphEvents = [];
 
         this.decisionHandler(this);
         for (const entity of this.entities.values()) {
@@ -164,82 +198,15 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
         }
     }
 
+    queueTweencompletion = (event: TweenCompletionEvent) => {
+        this.pendingTweenEvents.push(event);
+    }
+
     queueGraphModification = (event: GraphModificationEvent) => {
-        this.pendingEvents.push(event);
+        this.pendingGraphEvents.push(event);
     }
 
     setController(handler: (positioner: GraphEntityPositioner) => void) {
         this.decisionHandler = handler;
-    }
-}
-
-export class EntityObject extends Phaser.GameObjects.Container {
-    private entityGraphics: Phaser.GameObjects.Graphics;
-
-    constructor(
-        public scene: Scene,
-        public renderData: EntityRenderData,
-        public entityPosition: EntityPosition,
-    ) {
-        super(scene);
-
-        this.entityGraphics = this.scene.add.graphics(ENTITY_GRAPHICS_STYLE);
-        this.add(this.entityGraphics);
-    }
-
-    private renderOnto(point: PhaserPosition) {
-        this.entityGraphics.clear();
-        this.setDepth(ENTITY_DEPTH);
-        this.entityGraphics.setPosition(point.x, point.y);
-
-        this.entityGraphics.fillStyle(this.renderData.colour);
-        const circle = new Phaser.Geom.Circle(0, 0, ENTITY_RADIUS);
-        this.entityGraphics.fillCircleShape(circle);
-        this.entityGraphics.strokeCircleShape(circle);
-    }
-
-    renderOntoNodePoint = (point: PhaserPosition, node: NodeObject) => {
-        node.add(this);
-        // multiply by 2 to double the render twice the radius away from the node centre
-        // points used here are relative to the node centre
-        this.renderOnto({ x: point.x * 2, y: point.y * 2 });
-    }
-
-    renderOntoEdgeSide = (startPoint: PhaserPosition, _edge: EdgeObject, endPoint: PhaserPosition) => {
-        this.scene.add.existing(this);
-        // points used here are absolute
-        this.renderOnto(startPoint);
-
-        this.scene.tweens.add({
-            targets: this.entityGraphics,
-            x: endPoint.x,
-            y: endPoint.y,
-            duration: getPhaserDuration(startPoint, this.renderData.simMoveSpeed, endPoint) * 1000,
-            ease: 'Linear',
-            onComplete: () => {
-                // something to manage lifecycle of tween?
-                console.log(`finished at (${this.x},${this.y})`);
-            }
-        })
-    }
-
-    handleGraphModification(event: GraphModificationEvent) {
-        switch (event.type) {
-            case "NODE_DELETED":
-                console.log(`entity '${this.renderData.entityID}', handling NODE_DELETED`);
-                break;
-            case "EDGE_DELETED":
-                console.log(`entity '${this.renderData.entityID}', handling EDGE_DELETED`);
-                break;
-            case "NODE_MOVED":
-                console.log(`entity '${this.renderData.entityID}', handling NODE_MOVED`);
-                break;
-            case "NODE_ADDED":
-                console.log(`entity '${this.renderData.entityID}', handling NODE_ADDED`);
-                break;
-            case "EDGE_ADDED":
-                console.log(`entity '${this.renderData.entityID}', handling EDGE_ADDED`);
-                break;
-        }
     }
 }

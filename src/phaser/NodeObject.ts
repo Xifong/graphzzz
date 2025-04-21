@@ -2,6 +2,7 @@ import { Scene } from 'phaser';
 import { getPhaserPositionOf } from '../util';
 import { GRAPH_GRAPHICS_STYLE, NODE_RADIUS, NODE_DEPTH } from '../scenes/vars';
 import { NodeEntityPositionerImp } from './NodeEntityPositioner';
+import { getNodePositioner } from '../util/positioners';
 
 export const NodeEvents = {
     REQUEST_DELETE: 'request-delete',
@@ -15,7 +16,6 @@ export class NodeObject extends Phaser.GameObjects.Container {
     private graphics: Phaser.GameObjects.Graphics;
     private shiftKey: Phaser.Input.Keyboard.Key | null = null;
     private nodeBody: Phaser.Geom.Circle;
-    public positioner: NodeEntityPositionerImp;
 
     constructor(
         public scene: Scene,
@@ -39,8 +39,10 @@ export class NodeObject extends Phaser.GameObjects.Container {
 
 
         this.nodeBody = this.drawNode();
-        this.positioner = new NodeEntityPositionerImp(this.scene, this.nodeBody, this);
-        this.add(this.positioner);
+
+        const positioner = new NodeEntityPositionerImp(this.scene, this.nodeBody, this);
+        this.scene.data.set(getNodePositioner(id), positioner);
+        this.add(positioner);
 
         this.setSize(NODE_RADIUS * 2, NODE_RADIUS * 2);
         this.setInteractive(

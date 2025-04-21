@@ -6,24 +6,25 @@ import { getPhaserPositionOf } from '../util';
 
 export class EdgeEntityPositionerImp extends Phaser.GameObjects.Container implements EdgeEntityPositioner {
     private entities: Map<number, (pointA: PhaserPosition, edge: EdgeObject, pointB: PhaserPosition) => void> = new Map();
-    private phaserStart: PhaserPosition;
-    private phaserEnd: PhaserPosition;
+    private phaserLeft: PhaserPosition;
+    private phaserRight: PhaserPosition;
 
     constructor(
         public scene: Scene,
         public readonly startPoint: SimPosition,
         private readonly edge: EdgeObject,
         public readonly endPoint: SimPosition,
+        public readonly endPointID: number,
     ) {
         super(scene);
 
-        this.phaserStart = getPhaserPositionOf(startPoint.x, startPoint.y);
-        this.phaserEnd = getPhaserPositionOf(endPoint.x, endPoint.y);
+        this.phaserLeft = getPhaserPositionOf(startPoint.x, startPoint.y);
+        this.phaserRight = getPhaserPositionOf(endPoint.x, endPoint.y);
     }
 
     private renderEntities() {
         for (const renderEntity of this.entities.values()) {
-            renderEntity(this.phaserStart, this.edge, this.phaserEnd);
+            renderEntity(this.phaserLeft, this.edge, this.phaserRight);
         }
     }
 

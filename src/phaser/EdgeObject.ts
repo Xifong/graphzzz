@@ -3,6 +3,7 @@ import { EDGE_DEPTH, GRAPH_GRAPHICS_STYLE } from "../scenes/vars";
 import { getPhaserPositionOf } from "../util";
 import { DEBUG_VISUALS } from "../vars";
 import { EdgeEntityPositionerImp } from "./EdgeEntityPositioner";
+import { getEdgePositioner } from "../util/positioners";
 
 const HITBOX_THICKNESS = 20;
 
@@ -22,8 +23,10 @@ export class EdgeObject extends Phaser.GameObjects.Container {
         public readonly id: number,
         public simStartX: number,
         public simStartY: number,
+        public startID: number,
         public simEndX: number,
         public simEndY: number,
+        public endID: number,
         public isInteractive: boolean = true,
     ) {
         super(scene);
@@ -34,17 +37,32 @@ export class EdgeObject extends Phaser.GameObjects.Container {
         this.setData("id", id);
         this.setName(`Edge '${this.id}'`);
 
+        // skip the hitbox and positioners in situations where the edge is being resized i.e. edge drawing
         if (this.isInteractive) {
             this.hitboxPolygon = this.getHitbox();
+
+            const leftPositioner = new EdgeEntityPositionerImp(
+                this.scene,
+                { x: simStartX, y: simStartY },
+                this,
+                { x: simEndX, y: simEndY },
+                endID,
+            );
+            this.add(leftPositioner);
+            this.scene.data.set(getEdgePositioner(id, endID), leftPositioner);
+
+            const rightPositioner = new EdgeEntityPositionerImp(
+                this.scene,
+                { x: simEndX, y: simEndY },
+                this,
+                { x: simStartX, y: simStartY },
+                startID,
+            );
+            this.add(rightPositioner);
+            this.scene.data.set(getEdgePositioner(id, startID), rightPositioner);
         }
+
         this.drawEdge();
-        this.positioner = new EdgeEntityPositionerImp(
-            this.scene,
-            { x: simStartX, y: simStartY },
-            this,
-            { x: simEndX, y: simEndY }
-        );
-        this.add(this.positioner);
 
         if (this.hitboxPolygon) {
             this.setInteractive(
