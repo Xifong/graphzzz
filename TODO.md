@@ -1,5 +1,5 @@
 - allow entities to transition to moving state
 - use tweens for entities moving between nodes
 - stop using ! asserts
-- extract vars for positioners in phaser data manager
+- refactor EntityObject
 - ID packing (i.e. nodes and edges should have no missing ids after serialisation)

@@ -15,6 +15,7 @@ export type TweenCompletionEvent = {
 
 export class EntityObject extends Phaser.GameObjects.Container {
     private entityGraphics: Phaser.GameObjects.Graphics;
+    private destroyed: boolean = false;
 
     constructor(
         public scene: Scene,
@@ -47,6 +48,10 @@ export class EntityObject extends Phaser.GameObjects.Container {
     }
 
     renderOntoEdgeSide = (startPoint: PhaserPosition, _edge: EdgeObject, endPoint: PhaserPosition) => {
+        if (this.scene === undefined) {
+            debugger;
+        }
+
         this.scene.add.existing(this);
         // points used here are absolute
         this.renderOnto(startPoint);
@@ -84,5 +89,9 @@ export class EntityObject extends Phaser.GameObjects.Container {
                 console.log(`entity '${this.renderData.entityID}', handling EDGE_ADDED`);
                 break;
         }
+    }
+
+    protected preDestroy(): void {
+        this.destroyed = true;
     }
 }

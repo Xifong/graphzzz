@@ -46,7 +46,7 @@ class EntityCreationError extends Error { }
 
 export class EntityController {
     private entities: Map<number, Entity> = new Map();
-    private moved: boolean = false;
+    private lastMoved: number;
 
     constructor(
         private graph: Graph
@@ -57,6 +57,7 @@ export class EntityController {
     private moveRandomEntityToAdjacentNode(positioner: GraphEntityPositioner) {
         const entitiesOnNodes: Entity[] =
             Array.from(this.entities.values()).filter((position: EntityPosition) => position.type == "ON_NODE");
+
         const entity: Entity = randomFrom(entitiesOnNodes);
 
         const currentNodeID = (entity as NodePosition).nodeID;
@@ -72,18 +73,10 @@ export class EntityController {
         positioner.moveEntityToNode(moveTo.id, { edgeID: edgeToUse.id }, entity);
     }
 
-    public updateEntities = (positioner: GraphEntityPositioner) => {
-        if (positioner.entityPositionOf(0) !== null) {
-            if (!this.moved) {
-                this.moveRandomEntityToAdjacentNode(positioner);
-                this.moved = true;
-            }
-            return
-        }
-
+    private initialiseEntities(positioner: GraphEntityPositioner) {
         const nodeIDs: number[] = [...this.graph.iterableNodeCopy].map((node) => node.id);
 
-        const entityNum = 5;
+        const entityNum = 20;
         const colors = getDistinctEntityColours(entityNum);
 
         for (let i = 0; i < entityNum; i++) {
@@ -94,7 +87,7 @@ export class EntityController {
             const renderData: EntityRenderData = {
                 entityID: i,
                 name: "blah",
-                simMoveSpeed: 100,
+                simMoveSpeed: 1000,
                 colour: colors[i],
             }
             positioner.initialiseEntity(position, renderData);
@@ -102,6 +95,26 @@ export class EntityController {
                 ...position,
                 ...renderData
             });
+        }
+    }
+
+    public updateEntities = (positioner: GraphEntityPositioner, time: number, _delta: number) => {
+        for (const [id, entity] of this.entities.entries()) {
+            // TODO: this is pretty dire!
+            this.entities.set(id, {
+                ...entity,
+                ...positioner.entityPositionOf(id),
+            });
+        }
+
+        if (this.entities.size === 0) {
+            this.initialiseEntities(positioner);
+            this.lastMoved = time;
+        }
+
+        if (time - this.lastMoved > 50) {
+            this.moveRandomEntityToAdjacentNode(positioner);
+            this.lastMoved = time;
         }
     }
 }

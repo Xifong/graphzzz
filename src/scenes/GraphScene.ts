@@ -7,7 +7,6 @@ import { EdgeEvents, EdgeObject } from '../phaser/EdgeObject';
 import { getGraphSerialiser } from '../graph/InteractiveGraph';
 import { GraphEntityRenderer, GraphEntityRendererImp } from '../phaser/GraphEntityRenderer';
 import { EntityController } from '../graph/GraphEntity';
-import { getNodePositioner } from '../util/positioners';
 
 
 export class GraphCanvas extends Phaser.GameObjects.Container {

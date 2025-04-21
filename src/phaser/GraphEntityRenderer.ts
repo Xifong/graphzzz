@@ -19,11 +19,18 @@ export interface EdgeEntityPositioner {
 
 
 class EntityRenderingError extends Error {
+    public cause?: unknown;
+
+    constructor(message: string, cause?: unknown) {
+        super(message);
+        this.name = 'EntityRenderingError';
+        this.cause = cause;
+    }
 }
 
 export interface GraphEntityRenderer {
     update: (time: number, delta: number) => void;
-    setController: (handler: (positioner: GraphEntityPositioner) => void) => void;
+    setController: (handler: (positioner: GraphEntityPositioner, time: number, delta: number) => void) => void;
     queueGraphModification: (event: GraphModificationEvent) => void;
 }
 
@@ -31,7 +38,7 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
     private pendingGraphEvents: GraphModificationEvent[] = [];
     private pendingTweenEvents: TweenCompletionEvent[] = [];
     private entities: Map<number, EntityObject> = new Map();
-    private decisionHandler: (positioner: GraphEntityPositioner) => void;
+    private decisionHandler: (positioner: GraphEntityPositioner, time: number, delta: number) => void;
 
     constructor(
         public scene: Scene,
@@ -88,39 +95,73 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
         );
 
         if (this.entities.has(entityRenderData.entityID)) {
-            this.entities.get(entityRenderData.entityID)!.destroy();
+            this.deleteEntityOld(entityRenderData.entityID);
         }
 
         this.entities.set(entityRenderData.entityID, newEntity);
         return newEntity;
     }
 
-    private positionAtEdge(edgePosition: EdgePosition, entityRenderData: EntityRenderData) {
+    private getNodePositioner(nodePosition: NodePosition): NodeEntityPositioner {
+        if (!this.scene.data.has(getNodePositioner(nodePosition.nodeID))) {
+            throw new EntityRenderingError(
+                `could not get node positioner for node '${nodePosition.nodeID}'`
+            );
+        }
+        return this.scene.data.get(getNodePositioner(nodePosition.nodeID));
+    }
+
+    private getEdgePositioner(edgePosition: EdgePosition): EdgeEntityPositioner {
         if (!this.scene.data.has(getEdgePositioner(edgePosition.edgeID, edgePosition.toNodeID))) {
             throw new EntityRenderingError(
-                `could not render entity with id '${entityRenderData.entityID}' on edge '${edgePosition.edgeID}', ` +
-                `since no edge positioner was found for this edge`
+                `could not get edge positioner for edge '${edgePosition.edgeID}'`
             );
         }
 
-        const newEntity = this.upsertEntityObject(edgePosition, entityRenderData);
+        return this.scene.data.get(getEdgePositioner(edgePosition.edgeID, edgePosition.toNodeID));
+    }
 
-        const positioner: EdgeEntityPositioner = this.scene.data.get(getEdgePositioner(edgePosition.edgeID, edgePosition.toNodeID));
-        positioner.addEntity(entityRenderData.entityID, newEntity.renderOntoEdgeSide);
+    private deleteEntityOld(id: number) {
+        const entity = this.entities.get(id);
+
+        if (entity === undefined) {
+            return;
+        }
+
+        switch (entity.entityPosition.type) {
+            case "ON_NODE":
+                this.getNodePositioner(entity.entityPosition).removeEntity(id);
+                break;
+            case "ON_EDGE":
+                this.getEdgePositioner(entity.entityPosition).removeEntity(id);
+                break;
+            case "FREE":
+                break;
+        }
+
+        this.entities.get(id)!.destroy();
+    }
+
+    private positionAtEdge(edgePosition: EdgePosition, entityRenderData: EntityRenderData) {
+        try {
+            const positioner = this.getEdgePositioner(edgePosition);
+            const newEntity = this.upsertEntityObject(edgePosition, entityRenderData);
+
+            positioner.addEntity(entityRenderData.entityID, newEntity.renderOntoEdgeSide);
+        } catch (error) {
+            throw new EntityRenderingError(`could not render entity '${entityRenderData.entityID}'`, error);
+        }
     }
 
     private positionAtNode(nodePosition: NodePosition, entityRenderData: EntityRenderData) {
-        if (!this.scene.data.has(getNodePositioner(nodePosition.nodeID))) {
-            throw new EntityRenderingError(
-                `could not render entity with id '${entityRenderData.entityID}' at node '${nodePosition.nodeID}', ` +
-                `since no node positioner was found for this node`
-            );
+        try {
+            const positioner = this.getNodePositioner(nodePosition);
+
+            const newEntity = this.upsertEntityObject(nodePosition, entityRenderData);
+            positioner.addEntity(entityRenderData.entityID, newEntity.renderOntoNodePoint);
+        } catch (error) {
+            throw new EntityRenderingError(`could not render entity '${entityRenderData.entityID}'`, error);
         }
-
-        const newEntity = this.upsertEntityObject(nodePosition, entityRenderData);
-
-        const positioner: NodeEntityPositioner = this.scene.data.get(getNodePositioner(nodePosition.nodeID));
-        positioner.addEntity(entityRenderData.entityID, newEntity.renderOntoNodePoint);
     }
 
     private reattachEntitiesToNode(nodeID: number) {
@@ -192,7 +233,7 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
         }
         this.pendingGraphEvents = [];
 
-        this.decisionHandler(this);
+        this.decisionHandler(this, time, delta);
         for (const entity of this.entities.values()) {
             entity.update(time, delta);
         }
@@ -206,7 +247,7 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
         this.pendingGraphEvents.push(event);
     }
 
-    setController(handler: (positioner: GraphEntityPositioner) => void) {
+    setController(handler: (positioner: GraphEntityPositioner, time: number, delta: number) => void) {
         this.decisionHandler = handler;
     }
 }
