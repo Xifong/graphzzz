@@ -16,6 +16,7 @@ export class NodeObject extends Phaser.GameObjects.Container {
     private graphics: Phaser.GameObjects.Graphics;
     private shiftKey: Phaser.Input.Keyboard.Key | null = null;
     private nodeBody: Phaser.Geom.Circle;
+    private positioner: NodeEntityPositionerImp;
 
     constructor(
         public scene: Scene,
@@ -40,9 +41,9 @@ export class NodeObject extends Phaser.GameObjects.Container {
 
         this.nodeBody = this.drawNode();
 
-        const positioner = new NodeEntityPositionerImp(this.scene, this.nodeBody, this);
-        this.scene.data.set(getNodePositioner(id), positioner);
-        this.add(positioner);
+        this.positioner = new NodeEntityPositionerImp(this.scene, this.nodeBody, this);
+        this.scene.data.set(getNodePositioner(id), this.positioner);
+        this.add(this.positioner);
 
         this.setSize(NODE_RADIUS * 2, NODE_RADIUS * 2);
         this.setInteractive(
@@ -108,6 +109,15 @@ export class NodeObject extends Phaser.GameObjects.Container {
         const phaserPosition = getPhaserPositionOf(simX, simY);
         this.setPosition(phaserPosition.x, phaserPosition.y);
         this.drawNode();
+    }
+
+    private removePositioners() {
+        this.scene.data.remove(getNodePositioner(this.id));
+        this.positioner?.destroy();
+    }
+
+    preDestroy() {
+        this.removePositioners();
     }
 }
 

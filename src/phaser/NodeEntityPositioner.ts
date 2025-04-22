@@ -15,7 +15,6 @@ export class NodeEntityPositionerImp extends Phaser.GameObjects.Container implem
     }
 
     private renderEntities() {
-        // console.log(`node positioner for node '${this.node.id}', has '${this.entities.size}' to render`);
         const points = this.nodeBody.getPoints(this.entities.size);
 
         const entityArray = Array.from(this.entities.values());

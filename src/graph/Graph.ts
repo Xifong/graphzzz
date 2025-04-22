@@ -41,6 +41,7 @@ export class GraphImp implements Graph {
     private edges: Map<number, GraphEdge> = new Map();
 
     // any edgeIDs must already exist
+    // node upsertion can mean adding new edges to an existing node
     upsertNode(id: number, edgeIDs: number[] = []): GraphNode {
         const newEdges: Set<GraphEdge> = new Set(this.nodes.get(id)?.edges) ?? [];
 
@@ -51,8 +52,13 @@ export class GraphImp implements Graph {
             newEdges.add(this.edges.get(edgeID)!);
         }
 
-        // node upsertion can mean adding new edges to an existing node
-        this.nodes.set(id, new GraphNodeImp(id, [...newEdges]));
+        const existingNode = this.nodes.get(id);
+        if (existingNode === undefined) {
+            this.nodes.set(id, new GraphNodeImp(id, [...newEdges]));
+        } else {
+            existingNode.edges = [...newEdges];
+        }
+
 
         return this.nodes.get(id)!;
     }

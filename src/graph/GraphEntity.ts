@@ -67,6 +67,10 @@ export class EntityController {
         const currentNodeID = (entity as NodePosition).nodeID;
         const neighbours = this.graph.neighboursOf(currentNodeID);
 
+        if (neighbours.length === 0) {
+            return;
+        }
+
         const moveTo = randomFrom(neighbours);
         const edgeToUse = this.graph.connectionBeteen(currentNodeID, moveTo.id);
 
@@ -104,7 +108,7 @@ export class EntityController {
 
     public updateEntities = (positioner: GraphEntityPositioner, time: number, _delta: number) => {
         for (const [id, entity] of this.entities.entries()) {
-            // TODO: this is pretty dire!
+            // TODO: this is pretty dire! Should have a single entity source of truth
             this.entities.set(id, {
                 ...entity,
                 ...positioner.entityPositionOf(id),

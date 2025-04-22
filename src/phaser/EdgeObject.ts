@@ -2,8 +2,8 @@ import { Scene } from "phaser";
 import { EDGE_DEPTH, GRAPH_GRAPHICS_STYLE } from "../scenes/vars";
 import { getPhaserPositionOf } from "../util";
 import { DEBUG_VISUALS } from "../vars";
-import { EdgeEntityPositionerImp } from "./EdgeEntityPositioner";
 import { getEdgePositioner } from "../util/positioners";
+import { EdgeEntityPositionerImp } from "./EdgeEntityPositioner";
 
 const HITBOX_THICKNESS = 20;
 
@@ -16,7 +16,8 @@ export class EdgeObject extends Phaser.GameObjects.Container {
     private graphics: Phaser.GameObjects.Graphics;
     private hitboxPolygon: Phaser.Geom.Polygon | null = null;
     private currentGraphicsStyle: Phaser.Types.GameObjects.Graphics.Options = JSON.parse(JSON.stringify(GRAPH_GRAPHICS_STYLE));
-    public positioner: EdgeEntityPositionerImp;
+    private leftPositioner: EdgeEntityPositionerImp;
+    private rightPositioner: EdgeEntityPositionerImp;
 
     constructor(
         public scene: Scene,
@@ -41,25 +42,25 @@ export class EdgeObject extends Phaser.GameObjects.Container {
         if (this.isInteractive) {
             this.hitboxPolygon = this.getHitbox();
 
-            const leftPositioner = new EdgeEntityPositionerImp(
+            this.leftPositioner = new EdgeEntityPositionerImp(
                 this.scene,
                 { x: simStartX, y: simStartY },
                 this,
                 { x: simEndX, y: simEndY },
                 endID,
             );
-            this.add(leftPositioner);
-            this.scene.data.set(getEdgePositioner(id, endID), leftPositioner);
+            this.add(this.leftPositioner);
+            this.scene.data.set(getEdgePositioner(id, endID), this.leftPositioner);
 
-            const rightPositioner = new EdgeEntityPositionerImp(
+            this.rightPositioner = new EdgeEntityPositionerImp(
                 this.scene,
                 { x: simEndX, y: simEndY },
                 this,
                 { x: simStartX, y: simStartY },
                 startID,
             );
-            this.add(rightPositioner);
-            this.scene.data.set(getEdgePositioner(id, startID), rightPositioner);
+            this.add(this.rightPositioner);
+            this.scene.data.set(getEdgePositioner(id, startID), this.rightPositioner);
         }
 
         this.drawEdge();
@@ -127,7 +128,15 @@ export class EdgeObject extends Phaser.GameObjects.Container {
         this.graphics.setDepth(EDGE_DEPTH);
     }
 
+    private removePositioners() {
+        this.scene.data.remove(getEdgePositioner(this.id, this.startID));
+        this.scene.data.remove(getEdgePositioner(this.id, this.endID));
+        this.leftPositioner?.destroy();
+        this.rightPositioner?.destroy();
+    }
+
     preDestroy(_scene?: boolean): void {
+        this.removePositioners();
         this.graphics.clear();
     }
 }

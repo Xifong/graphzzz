@@ -102,22 +102,11 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
         return newEntity;
     }
 
-    private getNodePositioner(nodePosition: NodePosition): NodeEntityPositioner {
-        if (!this.scene.data.has(getNodePositioner(nodePosition.nodeID))) {
-            throw new EntityRenderingError(
-                `could not get node positioner for node '${nodePosition.nodeID}'`
-            );
-        }
+    private getNodePositioner(nodePosition: NodePosition): NodeEntityPositioner | null {
         return this.scene.data.get(getNodePositioner(nodePosition.nodeID));
     }
 
-    private getEdgePositioner(edgePosition: EdgePosition): EdgeEntityPositioner {
-        if (!this.scene.data.has(getEdgePositioner(edgePosition.edgeID, edgePosition.toNodeID))) {
-            throw new EntityRenderingError(
-                `could not get edge positioner for edge '${edgePosition.edgeID}'`
-            );
-        }
-
+    private getEdgePositioner(edgePosition: EdgePosition): EdgeEntityPositioner | null {
         return this.scene.data.get(getEdgePositioner(edgePosition.edgeID, edgePosition.toNodeID));
     }
 
@@ -130,10 +119,10 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
 
         switch (entity.entityPosition.type) {
             case "ON_NODE":
-                this.getNodePositioner(entity.entityPosition).removeEntity(id);
+                this.getNodePositioner(entity.entityPosition)?.removeEntity(id);
                 break;
             case "ON_EDGE":
-                this.getEdgePositioner(entity.entityPosition).removeEntity(id);
+                this.getEdgePositioner(entity.entityPosition)?.removeEntity(id);
                 break;
             case "FREE":
                 break;
@@ -145,6 +134,11 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
     private positionAtEdge(edgePosition: EdgePosition, entityRenderData: EntityRenderData) {
         try {
             const positioner = this.getEdgePositioner(edgePosition);
+
+            if (!positioner) {
+                throw new EntityRenderingError(`could not get positioner for edge '${edgePosition.edgeID}'`);
+            }
+
             const newEntity = this.upsertEntityObject(edgePosition, entityRenderData);
 
             positioner.addEntity(entityRenderData.entityID, newEntity.renderOntoEdgeSide);
@@ -156,6 +150,10 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
     private positionAtNode(nodePosition: NodePosition, entityRenderData: EntityRenderData) {
         try {
             const positioner = this.getNodePositioner(nodePosition);
+
+            if (!positioner) {
+                throw new EntityRenderingError(`could not get positioner for node '${nodePosition.nodeID}'`);
+            }
 
             const newEntity = this.upsertEntityObject(nodePosition, entityRenderData);
             positioner.addEntity(entityRenderData.entityID, newEntity.renderOntoNodePoint);
