@@ -6,16 +6,16 @@ import { NodeObject } from "./NodeObject";
 import { EdgeObject } from "./EdgeObject";
 import { getPhaserDuration } from "../util";
 import { GraphModificationEvent } from "../graph/types";
+import { EntityRenderingError } from "./GraphEntityRenderer";
 
 export type TweenCompletionEvent = {
     type: "MOVE_COMPLETE",
     entityID: number,
 }
 
-
 export class EntityObject extends Phaser.GameObjects.Container {
     private entityGraphics: Phaser.GameObjects.Graphics;
-    private destroyed: boolean = false;
+    private currentTween?: Phaser.Tweens.Tween;
 
     constructor(
         public scene: Scene,
@@ -47,28 +47,39 @@ export class EntityObject extends Phaser.GameObjects.Container {
         this.renderOnto({ x: point.x * 2, y: point.y * 2 });
     }
 
+    cancelMovement() {
+        if (!this.currentTween) {
+            return;
+        }
+        this.currentTween.stop();
+        this.currentTween = undefined;
+    }
+
     renderOntoEdgeSide = (startPoint: PhaserPosition, _edge: EdgeObject, endPoint: PhaserPosition) => {
-        if (this.scene === undefined) {
-            debugger;
+        if (this.currentTween) {
+            throw new EntityRenderingError("attempted to move entity that was already moving");
         }
 
         this.scene.add.existing(this);
         // points used here are absolute
         this.renderOnto(startPoint);
 
-        this.scene.tweens.add({
+        const newTween = {
             targets: this.entityGraphics,
             x: endPoint.x,
             y: endPoint.y,
             duration: getPhaserDuration(startPoint, this.renderData.simMoveSpeed, endPoint) * 1000,
             ease: 'Linear',
             onComplete: () => {
+                this.currentTween = undefined;
                 this.onTweenComplete({
                     type: "MOVE_COMPLETE",
                     entityID: this.renderData.entityID,
                 });
             }
-        })
+        }
+
+        this.currentTween = this.scene.tweens.add(newTween);
     }
 
     handleGraphModification(event: GraphModificationEvent) {
@@ -89,9 +100,5 @@ export class EntityObject extends Phaser.GameObjects.Container {
                 console.log(`entity '${this.renderData.entityID}', handling EDGE_ADDED`);
                 break;
         }
-    }
-
-    protected preDestroy(): void {
-        this.destroyed = true;
     }
 }

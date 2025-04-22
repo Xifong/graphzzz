@@ -18,7 +18,7 @@ export interface EdgeEntityPositioner {
 }
 
 
-class EntityRenderingError extends Error {
+export class EntityRenderingError extends Error {
     public cause?: unknown;
 
     constructor(message: string, cause?: unknown) {
@@ -216,7 +216,6 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
     private handleTweenCompletion(event: TweenCompletionEvent) {
         switch (event.type) {
             case "MOVE_COMPLETE":
-                console.log(`renderer handling MOVE_COMPLETE`);
                 this.attachEntityToDestinationNode(event.entityID);
                 break;
         }

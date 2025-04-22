@@ -22,15 +22,9 @@ export class EdgeEntityPositionerImp extends Phaser.GameObjects.Container implem
         this.phaserRight = getPhaserPositionOf(endPoint.x, endPoint.y);
     }
 
-    private renderEntities() {
-        for (const renderEntity of this.entities.values()) {
-            renderEntity(this.phaserLeft, this.edge, this.phaserRight);
-        }
-    }
-
     addEntity(entityID: number, entityRender: (pointA: PhaserPosition, edge: EdgeObject, pointB: PhaserPosition) => void): void {
         this.entities.set(entityID, entityRender);
-        this.renderEntities();
+        entityRender(this.phaserLeft, this.edge, this.phaserRight);
     }
 
     removeEntity(entityID: number): void {
@@ -38,6 +32,5 @@ export class EdgeEntityPositionerImp extends Phaser.GameObjects.Container implem
             return;
         }
         this.entities.delete(entityID);
-        this.renderEntities();
     }
 }

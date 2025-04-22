@@ -58,6 +58,10 @@ export class EntityController {
         const entitiesOnNodes: Entity[] =
             Array.from(this.entities.values()).filter((position: EntityPosition) => position.type == "ON_NODE");
 
+        if (entitiesOnNodes.length === 0) {
+            return;
+        }
+
         const entity: Entity = randomFrom(entitiesOnNodes);
 
         const currentNodeID = (entity as NodePosition).nodeID;
@@ -76,7 +80,7 @@ export class EntityController {
     private initialiseEntities(positioner: GraphEntityPositioner) {
         const nodeIDs: number[] = [...this.graph.iterableNodeCopy].map((node) => node.id);
 
-        const entityNum = 20;
+        const entityNum = 40;
         const colors = getDistinctEntityColours(entityNum);
 
         for (let i = 0; i < entityNum; i++) {
