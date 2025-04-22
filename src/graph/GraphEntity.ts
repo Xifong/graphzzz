@@ -72,7 +72,7 @@ export class EntityController {
         }
 
         const moveTo = randomFrom(neighbours);
-        const edgeToUse = this.graph.connectionBeteen(currentNodeID, moveTo.id);
+        const edgeToUse = this.graph.connectionBetween(currentNodeID, moveTo.id);
 
         if (edgeToUse === null) {
             throw new EntityCreationError("could not move random entity because inconsistency between graph.connectionBeteen and graph.neighboursOf found");
@@ -84,7 +84,7 @@ export class EntityController {
     private initialiseEntities(positioner: GraphEntityPositioner) {
         const nodeIDs: number[] = [...this.graph.iterableNodeCopy].map((node) => node.id);
 
-        const entityNum = 40;
+        const entityNum = 80;
         const colors = getDistinctEntityColours(entityNum);
 
         for (let i = 0; i < entityNum; i++) {
@@ -95,7 +95,7 @@ export class EntityController {
             const renderData: EntityRenderData = {
                 entityID: i,
                 name: "blah",
-                simMoveSpeed: 1000,
+                simMoveSpeed: 100,
                 colour: colors[i],
             }
             positioner.initialiseEntity(position, renderData);
@@ -120,7 +120,7 @@ export class EntityController {
             this.lastMoved = time;
         }
 
-        if (time - this.lastMoved > 50) {
+        if (time - this.lastMoved > 100) {
             this.moveRandomEntityToAdjacentNode(positioner);
             this.lastMoved = time;
         }

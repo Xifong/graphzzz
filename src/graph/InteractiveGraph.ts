@@ -69,23 +69,34 @@ export class InteractiveGraphImp implements InteractiveGraph, GraphEventEmitter 
     }
 
     deleteNode(id: number): boolean {
-        const wasDeletedFromPositions = this.positions.delete(id);
-        const wasDeletedFromGraph = this.graph.deleteIfExistsNode(id);
+        if (!this.graph.hasNode(id)) {
+            return false;
+        }
 
-        if (wasDeletedFromGraph !== wasDeletedFromGraph) {
+        const wasDeletedFromPositions = this.positions.delete(id);
+        if (!wasDeletedFromPositions) {
             throw new InteractiveGraphManipulationError(
-                `corrupt state while deleting node '${id}', this id was in positions: '${wasDeletedFromPositions}', but this id was in grap: '${wasDeletedFromGraph}'`
+                `corrupt state while deleting node '${id}', no positioner found`
             );
         }
 
-        if (wasDeletedFromGraph) {
+        const edges = this.graph.edgesCopyOf(id);
+
+        this.graph.deleteIfExistsNode(id);
+
+        for (const edge of edges) {
             this.emitEvent({
-                type: "NODE_DELETED",
-                nodeID: id,
-            });
+                type: "EDGE_DELETED",
+                edgeID: edge.id,
+            })
         }
 
-        return wasDeletedFromGraph;
+        this.emitEvent({
+            type: "NODE_DELETED",
+            nodeID: id,
+        });
+
+        return true;
     }
 
     placeNodeAt(x: number, y: number) {

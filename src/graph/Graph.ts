@@ -5,13 +5,13 @@ class GraphQueryError extends Error { }
 
 export class GraphIterables<T> implements Iterable<T> {
     constructor(
-        public nodes: Map<number, T>
+        public graphObject: Map<number, T>
     ) {
     }
 
     *[Symbol.iterator](): Iterator<T> {
-        for (const node of this.nodes.values()) {
-            yield node;
+        for (const graphObject of this.graphObject.values()) {
+            yield graphObject;
         }
     }
 }
@@ -147,7 +147,7 @@ export class GraphImp implements Graph {
 
     }
 
-    connectionBeteen(nodeID: number, otherNodeID: number): GraphEdge | null {
+    connectionBetween(nodeID: number, otherNodeID: number): GraphEdge | null {
         const node = this.nodes.get(nodeID);
 
         if (node === undefined) {
@@ -170,5 +170,18 @@ export class GraphImp implements Graph {
         }
 
         return connecting[0];
+    }
+
+    hasNode(nodeID: number): boolean {
+        return this.nodes.has(nodeID);
+    }
+
+    edgesCopyOf(nodeID: number): GraphEdge[] {
+        const node = this.nodes.get(nodeID);
+        if (node === undefined) {
+            return [];
+        }
+
+        return node.edges;
     }
 }

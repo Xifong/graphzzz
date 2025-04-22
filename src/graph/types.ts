@@ -40,7 +40,9 @@ export interface Graph {
     deleteIfExistsEdge: (id: number) => boolean;
 
     neighboursOf: (id: number) => GraphNode[];
-    connectionBeteen: (nodeID: number, otherNodeID: number) => GraphEdge | null;
+    connectionBetween: (nodeID: number, otherNodeID: number) => GraphEdge | null;
+    hasNode: (id: number) => boolean;
+    edgesCopyOf: (id: number) => GraphEdge[];
 }
 
 export interface GraphRenderData {
