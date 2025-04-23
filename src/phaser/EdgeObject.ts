@@ -2,7 +2,7 @@ import { Scene } from "phaser";
 import { EDGE_DEPTH, GRAPH_GRAPHICS_STYLE } from "../scenes/vars";
 import { getPhaserPositionOf } from "../util";
 import { DEBUG_VISUALS } from "../vars";
-import { getEdgePositioner } from "../util/positioners";
+import { getEdgePositioner } from "../util/graphData";
 import { EdgeEntityPositionerImp } from "./EdgeEntityPositioner";
 
 const HITBOX_THICKNESS = 20;

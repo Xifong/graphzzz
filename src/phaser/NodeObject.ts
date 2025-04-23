@@ -2,7 +2,7 @@ import { Scene } from 'phaser';
 import { getPhaserPositionOf } from '../util';
 import { GRAPH_GRAPHICS_STYLE, NODE_RADIUS, NODE_DEPTH } from '../scenes/vars';
 import { NodeEntityPositionerImp } from './NodeEntityPositioner';
-import { getNode, getNodePositioner } from '../util/positioners';
+import { getNode, getNodePositioner } from '../util/graphData';
 
 export const NodeEvents = {
     REQUEST_DELETE: 'request-delete',

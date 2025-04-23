@@ -5,7 +5,7 @@ import { NodeObject } from "./NodeObject";
 import { PhaserPosition } from "../types";
 import { EdgeObject } from "./EdgeObject";
 import { EntityObject, TweenCompletionEvent } from "./EntityObject";
-import { getEdgePositioner, getNode, getNodePositioner } from "../util/positioners";
+import { getEdgePositioner, getNode, getNodePositioner } from "../util/graphData";
 
 export interface NodeEntityPositioner {
     addEntity(entityID: number, renderEntity: (point: PhaserPosition, node: NodeObject) => void): void

@@ -1,5 +1,4 @@
-- single source of truth for entities (shared by renderer and controller)
-    - this should help with targeting of free entities to nearest node
+- why do entities sometimes go to second closest node??
 - stop using ! asserts
 - refactor NodeObject
 - add doc strings to the rest of the utils
