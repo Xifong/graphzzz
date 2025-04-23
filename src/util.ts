@@ -51,7 +51,7 @@ export function getSimPositionOf(x: number, y: number): SimPosition {
 }
 
 export function distanceBetween(pointA: { x: number, y: number }, pointB: { x: number, y: number }): number {
-    return Math.sqrt((pointA.x - pointB.x) ** 2 + (pointA.y - pointB.y) ** 2);
+    return Math.sqrt((pointB.x - pointA.x) ** 2 + (pointB.y - pointA.y) ** 2);
 }
 
 export function getPhaserDuration(pointA: PhaserPosition, simSpeed: number, pointB: PhaserPosition): number {
@@ -60,9 +60,10 @@ export function getPhaserDuration(pointA: PhaserPosition, simSpeed: number, poin
 
     const simDistance = distanceBetween(simPointA, simPointB);
 
-    // * 2 so that a speed of 100 translates to 50 simdist/s
-    // 50 simdist/s means traversing a graph in roughly 30s
-    return (simDistance * 2) / simSpeed;
+    // *1.25 so that a speed of 100 translates to 80 simdist/s
+    // 80 simdist/s means traversing a graph in roughly 30s
+    // assuming traversal takes roughly 2500 sim dist
+    return (simDistance * 1.25) / simSpeed;
 }
 
 export function randomFrom<T>(array: T[]): T {

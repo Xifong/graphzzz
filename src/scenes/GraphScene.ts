@@ -7,6 +7,7 @@ import { EdgeEvents, EdgeObject } from '../phaser/EdgeObject';
 import { getGraphSerialiser } from '../graph/InteractiveGraph';
 import { GraphEntityRenderer, GraphEntityRendererImp } from '../phaser/GraphEntityRenderer';
 import { EntityController } from '../graph/GraphEntity';
+import { GRAPH_MAX_X, GRAPH_MAX_Y } from '../graph/vars';
 
 
 export class GraphCanvas extends Phaser.GameObjects.Container {
@@ -272,7 +273,7 @@ export class GraphScene extends Scene {
         this.camera = this.cameras.main;
         this.camera.setBackgroundColor(BACKGROUND_BEIGE);
 
-        const phaserRegion = getPhaserRegionOf(500, 500, 1000, 1000);
+        const phaserRegion = getPhaserRegionOf(GRAPH_MAX_X / 2, GRAPH_MAX_Y / 2, GRAPH_MAX_X, GRAPH_MAX_Y);
         this.graphCanvas = new GraphCanvas(
             this,
             phaserRegion.x,

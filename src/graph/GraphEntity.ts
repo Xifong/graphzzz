@@ -1,5 +1,5 @@
 import { SimPosition } from "../types"
-import { randomFrom } from "../util";
+import { randomFrom, getSimPositionOf } from "../util";
 import { getDistinctEntityColours } from '../util/colours';
 import { Graph, InteractiveGraph } from './types';
 
@@ -140,7 +140,9 @@ export class EntityController {
 
         for (const [_, entity] of this.entities.entries()) {
             if (entity.type === "FREE" && entity.toNodeID === undefined) {
-                positioner.moveEntityToNode(this.interactiveGraph.nearestNodeTo(entity.x, entity.y), entity);
+                // Convert Phaser coordinates to Simulation coordinates before finding nearest node
+                const simPosition = getSimPositionOf(entity.x, entity.y);
+                positioner.moveEntityToNode(this.interactiveGraph.nearestNodeTo(simPosition.x, simPosition.y), entity);
             }
         }
 

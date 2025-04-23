@@ -20,8 +20,8 @@ export class Preloader extends Scene {
     }
 
     preload() {
-        this.load.json('graph-1', './data/graph_1.json');
         this.load.json('graph-2', './data/graph_2.json');
+        this.load.json('line-graph', './data/line_graph.json');
     }
 
     create() {

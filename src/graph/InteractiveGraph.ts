@@ -119,6 +119,7 @@ export class InteractiveGraphImp implements InteractiveGraph, GraphEventEmitter 
     nearestNodeTo(x: number, y: number): number {
         let minDist = Number.MAX_VALUE;
         let minID = null;
+
         for (const [id, position] of this.positions.entries()) {
             const distance = distanceBetween(position, { x: x, y: y });
             if (distance < minDist) {

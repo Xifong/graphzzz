@@ -1,5 +1,6 @@
-- why do entities sometimes go to second closest node??
+- node deletion race condition
 - stop using ! asserts
 - refactor NodeObject
 - add doc strings to the rest of the utils
 - ID packing (i.e. nodes and edges should have no missing ids after serialisation)
+- make entities drift faster
