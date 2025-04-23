@@ -31,6 +31,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
         this.edgeObjects = new Map();
         this.setDepth(CANVAS_DEPTH);
         this.shiftKey = this.scene.input.keyboard!.addKey("SHIFT");
+        this.scene.data.set("graph-scene", this);
         this.setInteractive();
     }
 

@@ -2,4 +2,5 @@
     - this should help with targeting of free entities to nearest node
 - stop using ! asserts
 - refactor NodeObject
+- add doc strings to the rest of the utils
 - ID packing (i.e. nodes and edges should have no missing ids after serialisation)

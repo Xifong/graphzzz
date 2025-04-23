@@ -2,7 +2,7 @@ import { Scene } from 'phaser';
 import { getPhaserPositionOf } from '../util';
 import { GRAPH_GRAPHICS_STYLE, NODE_RADIUS, NODE_DEPTH } from '../scenes/vars';
 import { NodeEntityPositionerImp } from './NodeEntityPositioner';
-import { getNodePositioner } from '../util/positioners';
+import { getNode, getNodePositioner } from '../util/positioners';
 
 export const NodeEvents = {
     REQUEST_DELETE: 'request-delete',
@@ -34,6 +34,7 @@ export class NodeObject extends Phaser.GameObjects.Container {
 
         this.setData("id", id);
         this.setName(`Node '${this.id}'`);
+        this.scene.data.set(getNode(this.id), this);
 
         this.graphics = this.scene.add.graphics(GRAPH_GRAPHICS_STYLE);
         this.add(this.graphics);
@@ -118,6 +119,7 @@ export class NodeObject extends Phaser.GameObjects.Container {
 
     preDestroy() {
         this.removePositioners();
+        this.scene.data.remove(getNode(this.id));
     }
 }
 

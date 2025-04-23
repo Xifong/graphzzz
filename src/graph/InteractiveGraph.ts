@@ -2,6 +2,7 @@ import { GraphRenderData, Graph, InteractiveGraph, InteractiveGraphDeserialiser,
 import { GraphImp } from '../graph/Graph';
 import { GRAPH_MAX_X, GRAPH_MAX_Y } from './vars';
 import { z } from "zod";
+import { distanceBetween } from '../util';
 
 type NodePositions = Map<number, {
     id: number,
@@ -113,6 +114,24 @@ export class InteractiveGraphImp implements InteractiveGraph, GraphEventEmitter 
             x: x,
             y: y,
         });
+    }
+
+    nearestNodeTo(x: number, y: number): number {
+        let minDist = Number.MAX_VALUE;
+        let minID = null;
+        for (const [id, position] of this.positions.entries()) {
+            const distance = distanceBetween(position, { x: x, y: y });
+            if (distance < minDist) {
+                minDist = distance;
+                minID = id;
+            }
+        }
+
+        if (minID === null) {
+            throw new InteractiveGraphManipulationError("cannot get nearest node when there are no nodes");
+        }
+
+        return minID;
     }
 
     getRenderData(): GraphRenderData {

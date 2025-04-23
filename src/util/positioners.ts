@@ -5,3 +5,7 @@ export function getNodePositioner(nodeID: number): string {
 export function getEdgePositioner(edgeID: number, targetNodeID: number): string {
     return `${edgeID}-edge-to-node-${targetNodeID}-positioner`;
 }
+
+export function getNode(nodeID: number): string {
+    return `node-${nodeID}`;
+}

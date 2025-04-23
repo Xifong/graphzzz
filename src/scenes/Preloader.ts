@@ -2,6 +2,7 @@ import { Scene } from 'phaser';
 import { BACKGROUND_BEIGE } from './vars';
 import { GraphDeserialiser } from '../graph/InteractiveGraph';
 import { EntityController } from '../graph/GraphEntity';
+import { USE_GRAPH } from '../vars';
 
 export class Preloader extends Scene {
     constructor() {
@@ -27,10 +28,11 @@ export class Preloader extends Scene {
         this.cameras.main.setBackgroundColor(BACKGROUND_BEIGE);
 
         const graphDeserialiser = new GraphDeserialiser();
-        const graphOnly = graphDeserialiser.deserialiseGraphOnly(this.cache.json.get("graph-2"));
-        const entityController = new EntityController(graphOnly);
+        const json = this.cache.json.get(USE_GRAPH);
+        const graphOnly = graphDeserialiser.deserialiseGraphOnly(json);
+        const graphWithPositions = graphDeserialiser.deserialiseWithPositions(json);
 
-        const graphWithPositions = graphDeserialiser.deserialiseWithPositions(this.cache.json.get("graph-2"));
+        const entityController = new EntityController(graphOnly, graphWithPositions);
         this.scene.start(
             'GraphScene',
             { graph: graphWithPositions, entityController: entityController }

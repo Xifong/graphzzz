@@ -1,11 +1,11 @@
 import { Scene } from "phaser";
-import { EdgePosition, EntityPosition, EntityRenderData, GraphEntityPositioner, MovementPath, NodePosition } from "../graph/GraphEntity";
+import { EdgePosition, EntityPosition, EntityRenderData, FreePosition, GraphEntityPositioner, NodePosition } from "../graph/GraphEntity";
 import { GraphModificationEvent } from "../graph/types";
 import { NodeObject } from "./NodeObject";
 import { PhaserPosition } from "../types";
 import { EdgeObject } from "./EdgeObject";
 import { EntityObject, TweenCompletionEvent } from "./EntityObject";
-import { getEdgePositioner, getNodePositioner } from "../util/positioners";
+import { getEdgePositioner, getNode, getNodePositioner } from "../util/positioners";
 
 export interface NodeEntityPositioner {
     addEntity(entityID: number, renderEntity: (point: PhaserPosition, node: NodeObject) => void): void
@@ -16,7 +16,6 @@ export interface EdgeEntityPositioner {
     addEntity(entityID: number, renderEntity: (pointA: PhaserPosition, edge: EdgeObject, pointB: PhaserPosition) => void): void
     removeEntity(entityID: number): void
 }
-
 
 export class EntityRenderingError extends Error {
     public cause?: unknown;
@@ -66,24 +65,46 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
         }
     }
 
-    moveEntityToNode(nodeID: number, movementPath: MovementPath, entityRenderData: EntityRenderData) {
-        const entity = this.entities.get(entityRenderData.entityID);
-
-        if (entity === undefined) {
-            return;
-        }
-        if (movementPath === null) {
-            return;
-        }
-
+    private moveEntityToNodeViaEdge(nodeID: number, entityRenderData: EntityRenderData, edgeID: number) {
         const edgePosition: EdgePosition = {
             type: "ON_EDGE",
-            edgeID: movementPath.edgeID,
+            edgeID: edgeID,
             toNodeID: nodeID,
             progressRatio: 0,
         };
 
         this.positionAtEdge(edgePosition, entityRenderData);
+    }
+
+    private moveEntityToNodeFreely(nodeID: number, entityRenderData: EntityRenderData) {
+        const entity = this.entities.get(entityRenderData.entityID);
+
+        if (entity === undefined) {
+            return;
+        }
+
+        const realPosition = entity.currentPosition();
+        const freePosition: FreePosition = {
+            type: "FREE",
+            x: realPosition.x,
+            y: realPosition.y,
+            toNodeID: nodeID,
+        };
+        this.positionFreely(freePosition, entityRenderData);
+    }
+
+    moveEntityToNode(nodeID: number, entityRenderData: EntityRenderData, edgeID?: number) {
+        const entity = this.entities.get(entityRenderData.entityID);
+
+        if (entity === undefined) {
+            return;
+        }
+
+        if (edgeID === undefined) {
+            this.moveEntityToNodeFreely(nodeID, entityRenderData);
+            return;
+        }
+        this.moveEntityToNodeViaEdge(nodeID, entityRenderData, edgeID);
     }
 
     private upsertEntityObject(position: EntityPosition, entityRenderData: EntityRenderData): EntityObject {
@@ -162,6 +183,21 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
         }
     }
 
+    private positionFreely(freePosition: FreePosition, entityRenderData: EntityRenderData) {
+        const newEntity = this.upsertEntityObject(freePosition, entityRenderData);
+        if (freePosition.toNodeID !== undefined) {
+            const nodeObject = this.scene.data.get(getNode(freePosition.toNodeID));
+
+            if (nodeObject === undefined) {
+                throw new EntityRenderingError(`attempted to move to non-existent node object for node id '${freePosition.toNodeID}'`);
+            }
+
+            newEntity.renderOntoGraphCanvas({ x: freePosition.x, y: freePosition.y }, nodeObject);
+            return
+        }
+        newEntity.renderOntoGraphCanvas({ x: freePosition.x, y: freePosition.y });
+    }
+
     private reattachEntitiesToNode(nodeID: number) {
         for (const entity of this.entities.values()) {
             if (entity.entityPosition.type === "ON_NODE" && entity.entityPosition.nodeID === nodeID) {
@@ -170,10 +206,41 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
         }
     }
 
+    private detachEntitiesFromNode(nodeID: number) {
+        for (const entity of this.entities.values()) {
+            switch (entity.entityPosition.type) {
+                case "ON_NODE":
+                    if (!(entity.entityPosition.nodeID === nodeID)) {
+                        continue;
+                    }
+                    break;
+                case "ON_EDGE":
+                    if (!(entity.entityPosition.toNodeID === nodeID)) {
+                        continue;
+                    }
+                    break;
+                case "FREE":
+                    if (!(entity.entityPosition.toNodeID === nodeID)) {
+                        continue;
+                    }
+                    break;
+            }
+
+            const realPosition = entity.currentPosition();
+            const position: FreePosition = {
+                type: "FREE",
+                x: realPosition.x,
+                y: realPosition.y,
+            }
+            this.positionFreely(position, entity.renderData);
+        }
+    }
+
     private handleGraphModification(event: GraphModificationEvent) {
         switch (event.type) {
             case "NODE_DELETED":
                 console.log(`renderer handling NODE_DELETED`);
+                this.detachEntitiesFromNode(event.nodeID);
                 break;
             case "EDGE_DELETED":
                 console.log(`renderer handling EDGE_DELETED`);
@@ -198,14 +265,18 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
             return;
         }
 
-        const entityEdgePosition = entity.entityPosition;
-        if (entityEdgePosition.type !== "ON_EDGE") {
+        const entityPosition = entity.entityPosition;
+        if (entityPosition.type === "ON_NODE") {
+            return;
+        }
+
+        if (entityPosition.toNodeID === undefined) {
             return;
         }
 
         const position: NodePosition = {
             type: "ON_NODE",
-            nodeID: entityEdgePosition.toNodeID,
+            nodeID: entityPosition.toNodeID,
         }
 
         this.positionAtNode(position, entity.renderData);

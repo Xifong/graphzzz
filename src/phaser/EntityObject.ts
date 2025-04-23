@@ -47,22 +47,10 @@ export class EntityObject extends Phaser.GameObjects.Container {
         this.renderOnto({ x: point.x * 2, y: point.y * 2 });
     }
 
-    cancelMovement() {
-        if (!this.currentTween) {
-            return;
-        }
-        this.currentTween.stop();
-        this.currentTween = undefined;
-    }
-
-    renderOntoEdgeSide = (startPoint: PhaserPosition, _edge: EdgeObject, endPoint: PhaserPosition) => {
+    private tweenBetween(startPoint: PhaserPosition, endPoint: PhaserPosition) {
         if (this.currentTween) {
             throw new EntityRenderingError("attempted to move entity that was already moving");
         }
-
-        this.scene.add.existing(this);
-        // points used here are absolute
-        this.renderOnto(startPoint);
 
         const newTween = {
             targets: this.entityGraphics,
@@ -80,6 +68,23 @@ export class EntityObject extends Phaser.GameObjects.Container {
         }
 
         this.currentTween = this.scene.tweens.add(newTween);
+    }
+
+    renderOntoEdgeSide = (startPoint: PhaserPosition, _edge: EdgeObject, endPoint: PhaserPosition) => {
+        this.scene.add.existing(this);
+        // points used here are absolute
+        this.renderOnto(startPoint);
+
+        this.tweenBetween(startPoint, endPoint);
+    }
+
+    renderOntoGraphCanvas = (startPoint: PhaserPosition, node?: NodeObject) => {
+        this.scene.add.existing(this);
+        this.renderOnto(startPoint);
+
+        if (node !== undefined) {
+            this.tweenBetween(startPoint, { x: node.x, y: node.y });
+        }
     }
 
     handleGraphModification(event: GraphModificationEvent) {
@@ -100,5 +105,10 @@ export class EntityObject extends Phaser.GameObjects.Container {
                 console.log(`entity '${this.renderData.entityID}', handling EDGE_ADDED`);
                 break;
         }
+    }
+
+    currentPosition(): PhaserPosition {
+        const { tx, ty } = this.entityGraphics.getWorldTransformMatrix();
+        return { x: tx, y: ty };
     }
 }

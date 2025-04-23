@@ -5,6 +5,7 @@ export interface InteractiveGraph {
     deleteEdge: (id: number) => boolean;
     deleteNode: (id: number) => boolean;
     getRenderData: () => GraphRenderData;
+    nearestNodeTo: (x: number, y: number) => number;
 }
 
 
