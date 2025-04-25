@@ -1,3 +1,4 @@
+- moving nodes should free entities travelling on adjacent edges
 - stop using ! asserts
 - refactor NodeObject
 - add doc strings to the rest of the utils

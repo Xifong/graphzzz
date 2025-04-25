@@ -261,6 +261,24 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
         }
     }
 
+    private detachEntitesFromEdge(edgeID: number) {
+        for (const entity of this.entities.values()) {
+            switch (entity.entityPosition.type) {
+                case "ON_NODE":
+                    continue;
+                case "ON_EDGE":
+                    if (!(entity.entityPosition.edgeID === edgeID)) {
+                        continue;
+                    }
+                    break;
+                case "FREE":
+                    continue;
+            }
+
+            this.detachEntity(entity);
+        }
+    }
+
     private handleGraphModification(event: GraphModificationEvent) {
         switch (event.type) {
             case "NODE_DELETED":
@@ -269,6 +287,7 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
                 break;
             case "EDGE_DELETED":
                 console.log(`renderer handling EDGE_DELETED`);
+                this.detachEntitesFromEdge(event.edgeID);
                 break;
             case "NODE_MOVED":
                 console.log(`renderer handling NODE_MOVED`);
