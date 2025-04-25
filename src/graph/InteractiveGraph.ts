@@ -116,7 +116,7 @@ export class InteractiveGraphImp implements InteractiveGraph, GraphEventEmitter 
         });
     }
 
-    nearestNodeTo(x: number, y: number): number {
+    nearestNodeTo(x: number, y: number): number | null {
         let minDist = Number.MAX_VALUE;
         let minID = null;
 
@@ -126,10 +126,6 @@ export class InteractiveGraphImp implements InteractiveGraph, GraphEventEmitter 
                 minDist = distance;
                 minID = id;
             }
-        }
-
-        if (minID === null) {
-            throw new InteractiveGraphManipulationError("cannot get nearest node when there are no nodes");
         }
 
         return minID;

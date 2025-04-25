@@ -317,15 +317,16 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
     }
 
     update(time: number, delta: number) {
+        for (const event of this.pendingGraphEvents) {
+            this.handleGraphModification(event);
+        }
+        this.pendingGraphEvents = [];
+
         for (const event of this.pendingTweenEvents) {
             this.handleTweenCompletion(event);
         }
         this.pendingTweenEvents = [];
 
-        for (const event of this.pendingGraphEvents) {
-            this.handleGraphModification(event);
-        }
-        this.pendingGraphEvents = [];
 
         this.decisionHandler(this, time, delta);
         for (const entity of this.entities.values()) {

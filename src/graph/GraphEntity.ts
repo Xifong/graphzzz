@@ -2,7 +2,7 @@ import { SimPosition } from "../types"
 import { randomFrom, getSimPositionOf } from "../util";
 import { getDistinctEntityColours } from '../util/colours';
 import { Graph, InteractiveGraph } from './types';
-import { GRAPH_ENTITY_NUM, GRAPH_ENTITY_SPEED } from "./vars";
+import { GRAPH_ENTITY_MOVE_INTERVAL, GRAPH_ENTITY_NUM, GRAPH_ENTITY_SPEED } from "./vars";
 
 export type NodePosition = {
     type: "ON_NODE",
@@ -143,11 +143,17 @@ export class EntityController {
             if (entity.type === "FREE" && entity.toNodeID === undefined) {
                 // Convert Phaser coordinates to Simulation coordinates before finding nearest node
                 const simPosition = getSimPositionOf(entity.x, entity.y);
-                positioner.moveEntityToNode(this.interactiveGraph.nearestNodeTo(simPosition.x, simPosition.y), entity);
+                const nearestNode = this.interactiveGraph.nearestNodeTo(simPosition.x, simPosition.y)
+
+                if (nearestNode === null) {
+                    continue;
+                }
+
+                positioner.moveEntityToNode(nearestNode, entity);
             }
         }
 
-        if (time - this.lastMoved > 100) {
+        if (time - this.lastMoved > GRAPH_ENTITY_MOVE_INTERVAL) {
             this.moveRandomEntityToAdjacentNode(positioner);
             this.lastMoved = time;
         }
