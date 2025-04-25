@@ -1,3 +1,4 @@
+- const realPosition = entity.currentPosition(); should probably be reversed straight away
 - node deletion race condition
 - stop using ! asserts
 - refactor NodeObject

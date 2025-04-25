@@ -111,4 +111,8 @@ export class EntityObject extends Phaser.GameObjects.Container {
         const { tx, ty } = this.entityGraphics.getWorldTransformMatrix();
         return { x: tx, y: ty };
     }
+
+    preDestroy(): void {
+        this.currentTween?.destroy();
+    }
 }

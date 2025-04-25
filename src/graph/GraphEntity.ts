@@ -2,6 +2,7 @@ import { SimPosition } from "../types"
 import { randomFrom, getSimPositionOf } from "../util";
 import { getDistinctEntityColours } from '../util/colours';
 import { Graph, InteractiveGraph } from './types';
+import { GRAPH_ENTITY_NUM, GRAPH_ENTITY_SPEED } from "./vars";
 
 export type NodePosition = {
     type: "ON_NODE",
@@ -81,7 +82,7 @@ export class EntityController {
     private initialiseEntities(positioner: GraphEntityPositioner) {
         const nodeIDs: number[] = [...this.graph.iterableNodeCopy].map((node) => node.id);
 
-        const entityNum = 80;
+        const entityNum = GRAPH_ENTITY_NUM;
         const colors = getDistinctEntityColours(entityNum);
 
         for (let i = 0; i < entityNum; i++) {
@@ -92,7 +93,7 @@ export class EntityController {
             const renderData: EntityRenderData = {
                 entityID: i,
                 name: "blah",
-                simMoveSpeed: 100,
+                simMoveSpeed: GRAPH_ENTITY_SPEED,
                 colour: colors[i],
             }
             positioner.initialiseEntity(position, renderData);

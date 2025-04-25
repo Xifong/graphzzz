@@ -206,6 +206,16 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
         }
     }
 
+    private detachEntity(entity: EntityObject) {
+        const exactPosition = entity.currentPosition();
+        const position: FreePosition = {
+            type: "FREE",
+            x: exactPosition.x,
+            y: exactPosition.y,
+        }
+        this.positionFreely(position, entity.renderData);
+    }
+
     private detachEntitiesFromNode(nodeID: number) {
         for (const entity of this.entities.values()) {
             switch (entity.entityPosition.type) {
@@ -226,13 +236,28 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
                     break;
             }
 
-            const realPosition = entity.currentPosition();
-            const position: FreePosition = {
-                type: "FREE",
-                x: realPosition.x,
-                y: realPosition.y,
+            this.detachEntity(entity);
+        }
+    }
+
+    private detachMovingEntitiesFromNode(nodeID: number) {
+        for (const entity of this.entities.values()) {
+            switch (entity.entityPosition.type) {
+                case "ON_NODE":
+                    continue;
+                case "ON_EDGE":
+                    if (!(entity.entityPosition.toNodeID === nodeID)) {
+                        continue;
+                    }
+                    break;
+                case "FREE":
+                    if (!(entity.entityPosition.toNodeID === nodeID)) {
+                        continue;
+                    }
+                    break;
             }
-            this.positionFreely(position, entity.renderData);
+
+            this.detachEntity(entity);
         }
     }
 
@@ -248,6 +273,7 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
             case "NODE_MOVED":
                 console.log(`renderer handling NODE_MOVED`);
                 this.reattachEntitiesToNode(event.nodeID);
+                this.detachMovingEntitiesFromNode(event.nodeID);
                 break;
             case "NODE_ADDED":
                 console.log(`renderer handling NODE_ADDED`);
