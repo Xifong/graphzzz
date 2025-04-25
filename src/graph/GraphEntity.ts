@@ -2,7 +2,7 @@ import { SimPosition } from "../types"
 import { randomFrom, getSimPositionOf } from "../util";
 import { getDistinctEntityColours } from '../util/colours';
 import { Graph, InteractiveGraph } from './types';
-import { GRAPH_ENTITY_MOVE_INTERVAL, GRAPH_ENTITY_NUM, GRAPH_ENTITY_SPEED } from "./vars";
+import { GRAPH_ENTITY_FREE_SPEED, GRAPH_ENTITY_MOVE_INTERVAL, GRAPH_ENTITY_NUM, GRAPH_ENTITY_SPEED } from "./vars";
 
 export type NodePosition = {
     type: "ON_NODE",
@@ -104,17 +104,21 @@ export class EntityController {
         }
     }
 
+    private unpackEntityRenderData(entity: Entity): EntityRenderData {
+        const entityRenderData: EntityRenderData = {
+            entityID: entity.entityID,
+            name: entity.name,
+            simMoveSpeed: entity.simMoveSpeed,
+            colour: entity.colour,
+        }
+        return entityRenderData;
+    }
+
     private syncEntities(positioner: GraphEntityPositioner) {
         // staying in sync with the latest entity positions from the positioner
         // assumes that the positioner never independently creates entities
         for (const [id, entity] of this.entities.entries()) {
-            const entityRenderData: EntityRenderData = {
-                entityID: entity.entityID,
-                name: entity.name,
-                simMoveSpeed: entity.simMoveSpeed,
-                colour: entity.colour,
-            }
-
+            const entityRenderData = this.unpackEntityRenderData(entity);
             const entityPosition: EntityPosition | null = positioner.entityPositionOf(id);
 
             if (entityPosition === null) {
@@ -149,7 +153,10 @@ export class EntityController {
                     continue;
                 }
 
-                positioner.moveEntityToNode(nearestNode, entity);
+                const entityRenderData = this.unpackEntityRenderData(entity);
+                entityRenderData.simMoveSpeed = GRAPH_ENTITY_FREE_SPEED;
+
+                positioner.moveEntityToNode(nearestNode, entityRenderData);
             }
         }
 
