@@ -292,6 +292,7 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
                 this.detachMovingEntitiesFromNode(event.nodeID);
                 break;
             case "EDGE_MOVED":
+                this.detachEntitesFromEdge(event.edgeID);
                 break;
         }
     }
