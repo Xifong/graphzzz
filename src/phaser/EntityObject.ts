@@ -47,9 +47,7 @@ export class EntityObject extends Phaser.GameObjects.Container {
             throw new EntityRenderingError("should never cancel tween unless on a node");
         }
 
-        if (this.currentTween) {
-            this.currentTween.destroy();
-        }
+        this.currentTween?.destroy();
 
         const newTween = {
             targets: this.entityGraphics,

@@ -79,3 +79,12 @@ export function getPhaserDuration(pointA: PhaserPosition, simSpeed: number, poin
     return (simDistance * 1.25) / simSpeed;
 }
 
+export function getPositionBetween(startPoint: PhaserPosition, distance: number, endPoint: PhaserPosition): PhaserPosition {
+    const percentage = distance / distanceBetween(startPoint, endPoint);
+
+    return {
+        x: startPoint.x + (endPoint.x - startPoint.x) * percentage,
+        y: startPoint.y + (endPoint.y - startPoint.y) * percentage
+    };
+}
+
