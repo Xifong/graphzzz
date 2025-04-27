@@ -13,7 +13,7 @@ export type EntityRenderFunc = (oldPoint: PhaserPosition, node: NodeObject, newP
 
 
 export interface NodeEntityPositioner {
-    addEntity(entityID: number, initialPosition: PhaserPosition, entityRenderer: EntityRenderFunc): void
+    addEntity(entityID: number, entityRenderer: EntityRenderFunc, initialPosition?: PhaserPosition): void
     removeEntity(entityID: number): void
 }
 
@@ -172,8 +172,10 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
                 throw new EntityRenderingError(`could not get positioner for node '${nodePosition.nodeID}'`);
             }
 
+            const previousPosition = this.entities.get(entityRenderData.entityID)?.currentPosition();
             const newEntity = this.upsertEntityObject(nodePosition, entityRenderData);
-            positioner.addEntity(entityRenderData.entityID, { x: 0, y: 0 }, newEntity.renderOntoNodePoint);
+
+            positioner.addEntity(entityRenderData.entityID, newEntity.renderOntoNodePoint, previousPosition);
         } catch (error) {
             throw new EntityRenderingError(`could not render entity '${entityRenderData.entityID}'`, error);
         }

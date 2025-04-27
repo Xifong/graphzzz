@@ -121,8 +121,15 @@ export class EntityObject extends Phaser.GameObjects.Container {
     }
 
     currentPosition(): PhaserPosition {
-        const { tx, ty } = this.entityGraphics.getWorldTransformMatrix();
-        return { x: tx, y: ty };
+        // This is an optimisation (we only need to convert from absolute back to world position when currently on a node)
+        if (this.entityPosition.type == "ON_NODE") {
+            const { tx, ty } = this.entityGraphics.getWorldTransformMatrix();
+            return { x: tx, y: ty };
+        }
+        return {
+            x: this.entityGraphics.x,
+            y: this.entityGraphics.y
+        }
     }
 
     preDestroy(): void {

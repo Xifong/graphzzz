@@ -27,6 +27,7 @@ export const ENTITY_GRAPHICS_STYLE = {
 
 export const NODE_RADIUS = 22;
 export const ENTITY_RADIUS = 6;
+export const ENTITY_DISPLAY_RADIUS_MULTIPLE = 2;
 
 export const ENTITY_DEPTH = 1;
 export const NODE_DEPTH = 0;

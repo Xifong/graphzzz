@@ -3,10 +3,10 @@ import { EdgeEntityPositioner } from './GraphEntityRenderer';
 import { PhaserPosition, SimPosition } from '../types';
 import { EdgeObject } from './EdgeObject';
 import { distanceBetween, getPhaserPositionOf, getPositionBetween } from '../util/positions';
-import { ENTITY_RADIUS, NODE_RADIUS } from '../scenes/vars';
+import { ENTITY_DISPLAY_RADIUS_MULTIPLE, NODE_RADIUS } from '../scenes/vars';
 
 // How far from the ends of the edge (ending at node centres) to stop movement
-const MOVE_POINT_DISTANCE = NODE_RADIUS + ENTITY_RADIUS + 1;
+const MOVE_POINT_DISTANCE = NODE_RADIUS * ENTITY_DISPLAY_RADIUS_MULTIPLE;
 
 export class EdgeEntityPositionerImp extends Phaser.GameObjects.Container implements EdgeEntityPositioner {
     private entities: Map<number, (pointA: PhaserPosition, edge: EdgeObject, pointB: PhaserPosition) => void> = new Map();

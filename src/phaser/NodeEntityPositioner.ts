@@ -2,7 +2,7 @@ import { Scene } from 'phaser';
 import { EntityRenderFunc, NodeEntityPositioner } from './GraphEntityRenderer';
 import { NodeObject } from './NodeObject';
 import { PhaserPosition } from '../types';
-
+import { ENTITY_DISPLAY_RADIUS_MULTIPLE } from '../scenes/vars';
 
 type NodeEntity = {
     renderer: EntityRenderFunc;
@@ -28,8 +28,8 @@ export class NodeEntityPositionerImp extends Phaser.GameObjects.Container implem
             const newPoint = points[pointIndex];
             // multiply by 2 to render twice the radius away from the node centre
             // points used here are relative to the node centre
-            newPoint.x *= 2;
-            newPoint.y *= 2;
+            newPoint.x *= ENTITY_DISPLAY_RADIUS_MULTIPLE;
+            newPoint.y *= ENTITY_DISPLAY_RADIUS_MULTIPLE;
 
             entityCopy.renderer(entityCopy.currentPoint, this.node, newPoint);
 
@@ -41,11 +41,19 @@ export class NodeEntityPositionerImp extends Phaser.GameObjects.Container implem
         }
     }
 
-    addEntity(entityID: number, initialPosition: PhaserPosition, entityRender: EntityRenderFunc) {
+    addEntity(entityID: number, entityRender: EntityRenderFunc, initialPosition?: PhaserPosition) {
+        let relativePosition = { x: 0, y: 0 };
+        if (initialPosition !== undefined) {
+            relativePosition = {
+                x: initialPosition.x - this.node.x,
+                y: initialPosition.y - this.node.y
+            }
+        }
+
         const nodeEntity = {
             renderer: entityRender,
             // Need to translate this into the relative coords
-            currentPoint: initialPosition,
+            currentPoint: relativePosition,
         }
         this.entities.set(entityID, nodeEntity);
         this.renderEntities();
