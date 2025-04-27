@@ -45,6 +45,13 @@ export class InteractiveGraphImp implements InteractiveGraph, GraphEventEmitter 
             newX: x,
             newY: y,
         });
+
+        for (const edge of this.graph.edgesCopyOf(id)) {
+            this.emitEvent({
+                type: "EDGE_MOVED",
+                edgeID: edge.id,
+            })
+        }
     }
 
     connectNodeTo(fromID: number, toID: number) {

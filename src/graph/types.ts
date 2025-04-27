@@ -75,6 +75,9 @@ export type GraphModificationEvent = {
     newX: number;
     newY: number;
 } | {
+    type: 'EDGE_MOVED';
+    edgeID: number;
+} | {
     type: 'NODE_ADDED';
     nodeID: number;
     x: number;

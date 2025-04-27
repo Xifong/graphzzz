@@ -282,23 +282,16 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
     private handleGraphModification(event: GraphModificationEvent) {
         switch (event.type) {
             case "NODE_DELETED":
-                console.log(`renderer handling NODE_DELETED`);
                 this.detachEntitiesFromNode(event.nodeID);
                 break;
             case "EDGE_DELETED":
-                console.log(`renderer handling EDGE_DELETED`);
                 this.detachEntitesFromEdge(event.edgeID);
                 break;
             case "NODE_MOVED":
-                console.log(`renderer handling NODE_MOVED`);
                 this.reattachEntitiesToNode(event.nodeID);
                 this.detachMovingEntitiesFromNode(event.nodeID);
                 break;
-            case "NODE_ADDED":
-                console.log(`renderer handling NODE_ADDED`);
-                break;
-            case "EDGE_ADDED":
-                console.log(`renderer handling EDGE_ADDED`);
+            case "EDGE_MOVED":
                 break;
         }
     }
