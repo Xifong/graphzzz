@@ -46,10 +46,11 @@ export class GraphImp implements Graph {
         const newEdges: Set<GraphEdge> = new Set(this.nodes.get(id)?.edges) ?? [];
 
         for (const edgeID of edgeIDs) {
-            if (!this.edges.has(edgeID)) {
+            const edge = this.edges.get(edgeID);
+            if (edge === undefined) {
                 throw new GraphManipulationError(`cannot add edge with id '${edgeID}' to node as it does not exist`);
             }
-            newEdges.add(this.edges.get(edgeID)!);
+            newEdges.add(edge);
         }
 
         const existingNode = this.nodes.get(id);
@@ -59,8 +60,12 @@ export class GraphImp implements Graph {
             existingNode.edges = [...newEdges];
         }
 
+        const newNode = this.nodes.get(id);
+        if (newNode === undefined) {
+            throw new GraphManipulationError("could not find new node that was just created");
+        }
 
-        return this.nodes.get(id)!;
+        return newNode;
     }
 
     // nodes may optionally already exist

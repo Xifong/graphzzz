@@ -149,7 +149,7 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
                 break;
         }
 
-        this.entities.get(id)!.destroy();
+        entity.destroy();
     }
 
     private positionAtEdge(edgePosition: EdgePosition, entityRenderData: EntityRenderData) {

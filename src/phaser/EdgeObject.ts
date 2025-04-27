@@ -4,6 +4,7 @@ import { getPhaserPositionOf } from "../util";
 import { DEBUG_VISUALS } from "../vars";
 import { getEdgePositioner } from "../util/graphData";
 import { EdgeEntityPositionerImp } from "./EdgeEntityPositioner";
+import { SimPosition } from "../types";
 
 const HITBOX_THICKNESS = 20;
 
@@ -22,11 +23,9 @@ export class EdgeObject extends Phaser.GameObjects.Container {
     constructor(
         public scene: Scene,
         public readonly id: number,
-        public simStartX: number,
-        public simStartY: number,
+        public simStartPosition: SimPosition,
         public startID: number,
-        public simEndX: number,
-        public simEndY: number,
+        public simEndPosition: SimPosition,
         public endID: number,
         public isInteractive: boolean = true,
     ) {
@@ -44,9 +43,9 @@ export class EdgeObject extends Phaser.GameObjects.Container {
 
             this.leftPositioner = new EdgeEntityPositionerImp(
                 this.scene,
-                { x: simStartX, y: simStartY },
+                simStartPosition,
                 this,
-                { x: simEndX, y: simEndY },
+                simEndPosition,
                 endID,
             );
             this.add(this.leftPositioner);
@@ -54,9 +53,9 @@ export class EdgeObject extends Phaser.GameObjects.Container {
 
             this.rightPositioner = new EdgeEntityPositionerImp(
                 this.scene,
-                { x: simEndX, y: simEndY },
+                simEndPosition,
                 this,
-                { x: simStartX, y: simStartY },
+                simStartPosition,
                 startID,
             );
             this.add(this.rightPositioner);
@@ -109,8 +108,8 @@ export class EdgeObject extends Phaser.GameObjects.Container {
     }
 
     private getHitbox(): Phaser.Geom.Polygon | null {
-        const phaserPositionStart = getPhaserPositionOf(this.simStartX, this.simStartY);
-        const phaserPositionEnd = getPhaserPositionOf(this.simEndX, this.simEndY);
+        const phaserPositionStart = getPhaserPositionOf(this.simStartPosition.x, this.simStartPosition.y);
+        const phaserPositionEnd = getPhaserPositionOf(this.simEndPosition.x, this.simEndPosition.y);
 
         return createHitboxPolygon(
             phaserPositionStart.x, phaserPositionStart.y,
@@ -122,8 +121,8 @@ export class EdgeObject extends Phaser.GameObjects.Container {
     private drawEdge() {
         this.graphics.clear();
         this.graphics.setDefaultStyles(this.currentGraphicsStyle);
-        const phaserPositionStart = getPhaserPositionOf(this.simStartX, this.simStartY);
-        const phaserPositionEnd = getPhaserPositionOf(this.simEndX, this.simEndY);
+        const phaserPositionStart = getPhaserPositionOf(this.simStartPosition.x, this.simStartPosition.y);
+        const phaserPositionEnd = getPhaserPositionOf(this.simEndPosition.x, this.simEndPosition.y);
         this.graphics.lineBetween(phaserPositionStart.x, phaserPositionStart.y, phaserPositionEnd.x, phaserPositionEnd.y);
         this.graphics.setDepth(EDGE_DEPTH);
     }

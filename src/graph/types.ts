@@ -1,9 +1,9 @@
 export interface InteractiveGraph {
     placeNodeAt: (x: number, y: number) => void;
-    moveNodeTo: (id: number, x: number, y: number) => void;
-    connectNodeTo: (fromID: number, toID: number) => void;
-    deleteEdge: (id: number) => boolean;
-    deleteNode: (id: number) => boolean;
+    moveNodeTo: (nodeID: number, x: number, y: number) => void;
+    connectNodeTo: (fromNodeID: number, toNodeID: number) => void;
+    deleteEdge: (edgeID: number) => boolean;
+    deleteNode: (nodeID: number) => boolean;
     getRenderData: () => GraphRenderData;
     nearestNodeTo: (x: number, y: number) => number | null;
 }
@@ -35,15 +35,15 @@ export interface Graph {
     iterableNodeCopy: Iterable<GraphNode>;
     iterableEdgeCopy: Iterable<GraphEdge>;
 
-    upsertNode: (id: number, edgeIDs?: number[]) => GraphNode;
-    upsertEdge: (id: number, leftNodeID: number, rightNodeID: number) => GraphEdge;
-    deleteIfExistsNode: (id: number) => boolean;
-    deleteIfExistsEdge: (id: number) => boolean;
+    upsertNode: (nodeID: number, edgeIDs?: number[]) => GraphNode;
+    upsertEdge: (edgeID: number, leftNodeID: number, rightNodeID: number) => GraphEdge;
+    deleteIfExistsNode: (nodeID: number) => boolean;
+    deleteIfExistsEdge: (edgeID: number) => boolean;
 
-    neighboursOf: (id: number) => GraphNode[];
+    neighboursOf: (nodeID: number) => GraphNode[];
     connectionBetween: (nodeID: number, otherNodeID: number) => GraphEdge | null;
-    hasNode: (id: number) => boolean;
-    edgesCopyOf: (id: number) => GraphEdge[];
+    hasNode: (nodeID: number) => boolean;
+    edgesCopyOf: (nodeID: number) => GraphEdge[];
 }
 
 export interface GraphRenderData {

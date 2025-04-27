@@ -1,6 +1,2 @@
-- moving nodes should free entities travelling on adjacent edges
-- stop using ! asserts
-- refactor NodeObject
 - add doc strings to the rest of the utils
 - ID packing (i.e. nodes and edges should have no missing ids after serialisation)
-- make entities drift faster

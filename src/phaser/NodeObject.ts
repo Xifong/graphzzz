@@ -3,6 +3,7 @@ import { getPhaserPositionOf } from '../util';
 import { GRAPH_GRAPHICS_STYLE, NODE_RADIUS, NODE_DEPTH } from '../scenes/vars';
 import { NodeEntityPositionerImp } from './NodeEntityPositioner';
 import { getNode, getNodePositioner } from '../util/graphData';
+import { SimPosition } from '../types';
 
 export const NodeEvents = {
     REQUEST_DELETE: 'request-delete',
@@ -21,11 +22,10 @@ export class NodeObject extends Phaser.GameObjects.Container {
     constructor(
         public scene: Scene,
         public readonly id: number,
-        public simX: number,
-        public simY: number,
+        public simPosition: SimPosition,
 
     ) {
-        const phaserPosition = getPhaserPositionOf(simX, simY);
+        const phaserPosition = getPhaserPositionOf(simPosition.x, simPosition.y);
         super(scene, phaserPosition.x, phaserPosition.y);
 
         if (this.scene.input.keyboard) {
@@ -104,10 +104,9 @@ export class NodeObject extends Phaser.GameObjects.Container {
         return circle;
     }
 
-    public moveNodePosition(simX: number, simY: number) {
-        this.simX = simX;
-        this.simY = simY;
-        const phaserPosition = getPhaserPositionOf(simX, simY);
+    public moveNodePosition(simPosition: SimPosition) {
+        this.simPosition = simPosition;
+        const phaserPosition = getPhaserPositionOf(simPosition.x, simPosition.y);
         this.setPosition(phaserPosition.x, phaserPosition.y);
         this.drawNode();
     }

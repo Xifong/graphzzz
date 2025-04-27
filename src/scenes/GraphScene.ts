@@ -8,6 +8,7 @@ import { getGraphSerialiser } from '../graph/InteractiveGraph';
 import { GraphEntityRenderer, GraphEntityRendererImp } from '../phaser/GraphEntityRenderer';
 import { EntityController } from '../graph/GraphEntity';
 import { GRAPH_MAX_X, GRAPH_MAX_Y } from '../graph/vars';
+import { SimPosition } from '../types';
 
 
 export class GraphCanvas extends Phaser.GameObjects.Container {
@@ -21,13 +22,14 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
 
     constructor(
         public scene: Scene,
-        public simX: number,
-        public simY: number,
+        private graph: InteractiveGraph,
+        public phaserX: number,
+        public phaserY: number,
+        // width and height are needed to ensure clicks events are handled across then entire region
         public width: number,
         public height: number,
-        private graph: InteractiveGraph
     ) {
-        super(scene, simX, simY);
+        super(scene, phaserX, phaserY);
         this.nodeObjects = new Map();
         this.edgeObjects = new Map();
         this.setDepth(CANVAS_DEPTH);
@@ -47,7 +49,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
             const leftNode = graphRenderData.nodes.filter((n) => n.id === edge.leftNodeID)[0];
             const rightNode = graphRenderData.nodes.filter((n) => n.id === edge.rightNodeID)[0];
 
-            const newEdge = new EdgeObject(this.scene, edge.id, leftNode.x, leftNode.y, leftNode.id, rightNode.x, rightNode.y, rightNode.id);
+            const newEdge = new EdgeObject(this.scene, edge.id, leftNode, leftNode.id, rightNode, rightNode.id);
             this.edgeObjects.set(edge.id, newEdge);
             this.scene.add.existing(newEdge);
         }
@@ -56,7 +58,7 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
             if (this.nodeObjects.has(node.id)) {
                 continue;
             }
-            const newNode = new NodeObject(this.scene, node.id, node.x, node.y);
+            const newNode = new NodeObject(this.scene, node.id, node);
             this.nodeObjects.set(node.id, newNode);
             this.scene.add.existing(newNode);
         }
@@ -94,7 +96,8 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
                     }
                     if (!this.moveLocked) {
                         this.graph.moveNodeTo(node.id, simPos.x, simPos.y);
-                        this.nodeObjects.get(node.id)!.moveNodePosition(simPos.x, simPos.y);
+                        this.nodeObjects.get(node.id)!.moveNodePosition(simPos);
+
                         this.renderGraph();
                     }
                 }
@@ -220,10 +223,10 @@ export class GraphCanvas extends Phaser.GameObjects.Container {
         }
     }
 
-    private continueEdgeCreation(fromPosition: { x: number, y: number }, toPosition: { x: number, y: number }) {
+    private continueEdgeCreation(fromPosition: SimPosition, toPosition: SimPosition) {
         this.deleteEdgePreview();
 
-        const newEdge = new EdgeObject(this.scene, -1, fromPosition.x, fromPosition.y, -1, toPosition.x, toPosition.y, -1, false);
+        const newEdge = new EdgeObject(this.scene, -1, fromPosition, -1, toPosition, -1, false);
         this.edgeObjects.set(-1, newEdge);
         this.scene.add.existing(newEdge);
     }
@@ -276,11 +279,11 @@ export class GraphScene extends Scene {
         const phaserRegion = getPhaserRegionOf(GRAPH_MAX_X / 2, GRAPH_MAX_Y / 2, GRAPH_MAX_X, GRAPH_MAX_Y);
         this.graphCanvas = new GraphCanvas(
             this,
+            this.graph,
             phaserRegion.x,
             phaserRegion.y,
             phaserRegion.width,
             phaserRegion.height,
-            this.graph
         );
         this.add.existing(this.graphCanvas);
         this.graphCanvas.renderGraph();
