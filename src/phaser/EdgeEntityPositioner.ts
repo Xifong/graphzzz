@@ -2,7 +2,7 @@ import { Scene } from 'phaser';
 import { EdgeEntityPositioner } from './GraphEntityRenderer';
 import { PhaserPosition, SimPosition } from '../types';
 import { EdgeObject } from './EdgeObject';
-import { getPhaserPositionOf } from '../util';
+import { getPhaserPositionOf } from '../util/positions';
 
 export class EdgeEntityPositionerImp extends Phaser.GameObjects.Container implements EdgeEntityPositioner {
     private entities: Map<number, (pointA: PhaserPosition, edge: EdgeObject, pointB: PhaserPosition) => void> = new Map();

@@ -1,2 +1,1 @@
-- add doc strings to the rest of the utils
 - ID packing (i.e. nodes and edges should have no missing ids after serialisation)

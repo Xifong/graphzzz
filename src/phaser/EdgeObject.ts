@@ -1,6 +1,6 @@
 import { Scene } from "phaser";
 import { EDGE_DEPTH, GRAPH_GRAPHICS_STYLE } from "../scenes/vars";
-import { getPhaserPositionOf } from "../util";
+import { getPhaserPositionOf } from "../util/positions";
 import { DEBUG_VISUALS } from "../vars";
 import { getEdgePositioner } from "../util/graphData";
 import { EdgeEntityPositionerImp } from "./EdgeEntityPositioner";

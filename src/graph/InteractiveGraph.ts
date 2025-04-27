@@ -2,7 +2,7 @@ import { GraphRenderData, Graph, InteractiveGraph, InteractiveGraphDeserialiser,
 import { GraphImp } from '../graph/Graph';
 import { GRAPH_MAX_X, GRAPH_MAX_Y } from './vars';
 import { z } from "zod";
-import { distanceBetween } from '../util';
+import { distanceBetween } from '../util/positions';
 
 type NodePositions = Map<number, {
     id: number,

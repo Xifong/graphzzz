@@ -4,7 +4,7 @@ import { PhaserPosition } from "../types";
 import { ENTITY_DEPTH, ENTITY_GRAPHICS_STYLE, ENTITY_RADIUS } from "../scenes/vars";
 import { NodeObject } from "./NodeObject";
 import { EdgeObject } from "./EdgeObject";
-import { getPhaserDuration } from "../util";
+import { getPhaserDuration } from "../util/positions";
 import { GraphModificationEvent } from "../graph/types";
 import { EntityRenderingError } from "./GraphEntityRenderer";
 

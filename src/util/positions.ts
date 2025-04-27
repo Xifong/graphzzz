@@ -1,6 +1,6 @@
-import { GRAPH_MAX_X, GRAPH_MAX_Y } from "./graph/vars";
-import { CANVAS_HEIGHT, CANVAS_WIDTH } from "./vars";
-import { PhaserRegion, PhaserPosition, SimPosition } from "./types";
+import { GRAPH_MAX_X, GRAPH_MAX_Y } from "../graph/vars";
+import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../vars";
+import { PhaserRegion, PhaserPosition, SimPosition } from "../types";
 
 /**
  * Converts simulation coordinates to Phaser region coordinates
@@ -50,10 +50,23 @@ export function getSimPositionOf(x: number, y: number): SimPosition {
     };
 }
 
+/**
+ * Calculates the Euclidean distance between two points
+ * @param pointA - First point with x and y coordinates
+ * @param pointB - Second point with x and y coordinates
+ * @returns Distance between the points
+ */
 export function distanceBetween(pointA: { x: number, y: number }, pointB: { x: number, y: number }): number {
     return Math.sqrt((pointB.x - pointA.x) ** 2 + (pointB.y - pointA.y) ** 2);
 }
 
+/**
+ * Calculates the duration for movement between two points based on simulation speed
+ * @param pointA - Starting position in Phaser coordinates
+ * @param simSpeed - Speed in simulation units
+ * @param pointB - Ending position in Phaser coordinates
+ * @returns Duration in milliseconds
+ */
 export function getPhaserDuration(pointA: PhaserPosition, simSpeed: number, pointB: PhaserPosition): number {
     const simPointA = getSimPositionOf(pointA.x, pointA.y);
     const simPointB = getSimPositionOf(pointB.x, pointB.y);
@@ -66,9 +79,3 @@ export function getPhaserDuration(pointA: PhaserPosition, simSpeed: number, poin
     return (simDistance * 1.25) / simSpeed;
 }
 
-export function randomFrom<T>(array: T[]): T {
-    if (array.length == 0) {
-        throw new Error("can't get random value from array of length 0");
-    }
-    return array[Math.floor(Math.random() * array.length)];
-}

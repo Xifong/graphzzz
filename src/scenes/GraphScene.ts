@@ -1,6 +1,6 @@
 import { Scene } from 'phaser';
 import { GraphEventEmitter, GraphModificationEvent, InteractiveGraph } from '../graph/types';
-import { getPhaserRegionOf, getSimPositionOf } from '../util';
+import { getPhaserRegionOf, getSimPositionOf } from '../util/positions';
 import { NodeEvents, NodeObject } from '../phaser/NodeObject';
 import { BACKGROUND_BEIGE, CANVAS_DEPTH } from './vars';
 import { EdgeEvents, EdgeObject } from '../phaser/EdgeObject';

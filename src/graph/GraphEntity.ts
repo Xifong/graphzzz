@@ -1,5 +1,6 @@
 import { SimPosition } from "../types"
-import { randomFrom, getSimPositionOf } from "../util";
+import { getSimPositionOf } from "../util/positions";
+import { randomFrom } from "../util/random";
 import { getDistinctEntityColours } from '../util/colours';
 import { Graph, InteractiveGraph } from './types';
 import { GRAPH_ENTITY_FREE_SPEED, GRAPH_ENTITY_MOVE_INTERVAL, GRAPH_ENTITY_NUM, GRAPH_ENTITY_SPEED } from "./vars";
