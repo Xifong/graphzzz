@@ -6,9 +6,14 @@ import { PhaserPosition } from "../types";
 import { EdgeObject } from "./EdgeObject";
 import { EntityObject, TweenCompletionEvent } from "./EntityObject";
 import { getEdgePositioner, getNode, getNodePositioner } from "../util/graphData";
+import { EntityRenderingError } from "./EntityRenderingError";
+
+
+export type EntityRenderFunc = (oldPoint: PhaserPosition, node: NodeObject, newPoint: PhaserPosition) => void;
+
 
 export interface NodeEntityPositioner {
-    addEntity(entityID: number, renderEntity: (point: PhaserPosition, node: NodeObject) => void): void
+    addEntity(entityID: number, initialPosition: PhaserPosition, entityRenderer: EntityRenderFunc): void
     removeEntity(entityID: number): void
 }
 
@@ -17,15 +22,6 @@ export interface EdgeEntityPositioner {
     removeEntity(entityID: number): void
 }
 
-export class EntityRenderingError extends Error {
-    public cause?: unknown;
-
-    constructor(message: string, cause?: unknown) {
-        super(message);
-        this.name = 'EntityRenderingError';
-        this.cause = cause;
-    }
-}
 
 export interface GraphEntityRenderer {
     update: (time: number, delta: number) => void;
@@ -177,7 +173,7 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
             }
 
             const newEntity = this.upsertEntityObject(nodePosition, entityRenderData);
-            positioner.addEntity(entityRenderData.entityID, newEntity.renderOntoNodePoint);
+            positioner.addEntity(entityRenderData.entityID, { x: 0, y: 0 }, newEntity.renderOntoNodePoint);
         } catch (error) {
             throw new EntityRenderingError(`could not render entity '${entityRenderData.entityID}'`, error);
         }

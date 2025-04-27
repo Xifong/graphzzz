@@ -6,7 +6,7 @@ import { NodeObject } from "./NodeObject";
 import { EdgeObject } from "./EdgeObject";
 import { getPhaserDuration } from "../util/positions";
 import { GraphModificationEvent } from "../graph/types";
-import { EntityRenderingError } from "./GraphEntityRenderer";
+import { EntityRenderingError } from "./EntityRenderingError";
 
 export type TweenCompletionEvent = {
     type: "MOVE_COMPLETE",
@@ -16,6 +16,7 @@ export type TweenCompletionEvent = {
 export class EntityObject extends Phaser.GameObjects.Container {
     private entityGraphics: Phaser.GameObjects.Graphics;
     private currentTween?: Phaser.Tweens.Tween;
+    private previouslyRendered: boolean = false;
 
     constructor(
         public scene: Scene,
@@ -30,6 +31,7 @@ export class EntityObject extends Phaser.GameObjects.Container {
     }
 
     private renderOnto(point: PhaserPosition) {
+        this.previouslyRendered = true;
         this.entityGraphics.clear();
         this.setDepth(ENTITY_DEPTH);
         this.entityGraphics.setPosition(point.x, point.y);
@@ -40,23 +42,20 @@ export class EntityObject extends Phaser.GameObjects.Container {
         this.entityGraphics.strokeCircleShape(circle);
     }
 
-    renderOntoNodePoint = (point: PhaserPosition, node: NodeObject) => {
-        node.add(this);
-        // multiply by 2 to double the render twice the radius away from the node centre
-        // points used here are relative to the node centre
-        this.renderOnto({ x: point.x * 2, y: point.y * 2 });
-    }
+    private tweenBetween(duration: number, endPoint: PhaserPosition) {
+        if (this.currentTween && this.entityPosition.type !== "ON_NODE") {
+            throw new EntityRenderingError("should never cancel tween unless on a node");
+        }
 
-    private tweenBetween(startPoint: PhaserPosition, endPoint: PhaserPosition) {
         if (this.currentTween) {
-            throw new EntityRenderingError("attempted to move entity that was already moving");
+            this.currentTween.destroy();
         }
 
         const newTween = {
             targets: this.entityGraphics,
             x: endPoint.x,
             y: endPoint.y,
-            duration: getPhaserDuration(startPoint, this.renderData.simMoveSpeed, endPoint) * 1000,
+            duration: duration,
             ease: 'Linear',
             onComplete: () => {
                 this.currentTween = undefined;
@@ -70,12 +69,27 @@ export class EntityObject extends Phaser.GameObjects.Container {
         this.currentTween = this.scene.tweens.add(newTween);
     }
 
+    renderOntoNodePoint = (suggestedStart: PhaserPosition, node: NodeObject, endPoint: PhaserPosition) => {
+        node.add(this);
+        if (!this.previouslyRendered) {
+            this.renderOnto(suggestedStart);
+        }
+
+        const currentPosition = {
+            x: this.entityGraphics.x,
+            y: this.entityGraphics.y,
+        }
+        const duration = getPhaserDuration(currentPosition, this.renderData.simMoveSpeed, endPoint) * 1000;
+        this.tweenBetween(duration, endPoint);
+    }
+
     renderOntoEdgeSide = (startPoint: PhaserPosition, _edge: EdgeObject, endPoint: PhaserPosition) => {
         this.scene.add.existing(this);
         // points used here are absolute
         this.renderOnto(startPoint);
 
-        this.tweenBetween(startPoint, endPoint);
+        const duration = getPhaserDuration(startPoint, this.renderData.simMoveSpeed, endPoint) * 1000;
+        this.tweenBetween(duration, endPoint);
     }
 
     renderOntoGraphCanvas = (startPoint: PhaserPosition, node?: NodeObject) => {
@@ -83,7 +97,8 @@ export class EntityObject extends Phaser.GameObjects.Container {
         this.renderOnto(startPoint);
 
         if (node !== undefined) {
-            this.tweenBetween(startPoint, { x: node.x, y: node.y });
+            const duration = getPhaserDuration(startPoint, this.renderData.simMoveSpeed, node) * 1000;
+            this.tweenBetween(duration, { x: node.x, y: node.y });
         }
     }
 
