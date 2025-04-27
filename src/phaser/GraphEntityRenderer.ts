@@ -104,11 +104,20 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
     }
 
     private upsertEntityObject(position: EntityPosition, entityRenderData: EntityRenderData): EntityObject {
+        const oldEntity = this.entities.get(entityRenderData.entityID);
+
+        let oldPosition = undefined;
+        if (oldEntity !== undefined) {
+            oldPosition = oldEntity.currentPosition();
+            this.deleteEntityOld(entityRenderData.entityID);
+        }
+
         const newEntity = new EntityObject(
             this.scene,
             entityRenderData,
             position,
             this.queueTweencompletion,
+            oldPosition,
         );
 
         if (this.entities.has(entityRenderData.entityID)) {
