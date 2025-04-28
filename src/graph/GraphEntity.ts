@@ -165,6 +165,10 @@ export class EntityController {
             this.moveRandomEntityToAdjacentNode(positioner);
             this.lastMoved = time;
         }
+
+        if (this.entities.size < GRAPH_ENTITY_NUM) {
+            throw Error("we've lost entities!");
+        }
     }
 }
 

@@ -7,6 +7,7 @@ import { EdgeObject } from "./EdgeObject";
 import { EntityObject, TweenCompletionEvent } from "./EntityObject";
 import { getEdgePositioner, getNode, getNodePositioner } from "../util/graphData";
 import { EntityRenderingError } from "./EntityRenderingError";
+import { GRAPH_ENTITY_NUM } from "../graph/vars";
 
 
 export type EntityRenderFunc = (oldPoint: PhaserPosition, node: NodeObject, newPoint: PhaserPosition) => void;
@@ -351,6 +352,10 @@ export class GraphEntityRendererImp extends Phaser.GameObjects.Container impleme
         this.decisionHandler(this, time, delta);
         for (const entity of this.entities.values()) {
             entity.update(time, delta);
+        }
+
+        if (this.entities.size < GRAPH_ENTITY_NUM) {
+            throw Error("we've lost entities (rend)!");
         }
     }
 

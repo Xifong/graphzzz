@@ -1,5 +1,2 @@
-- entity leak? :/
-    - Seems possible to harass an entity into disappearing
-    - Doesn't seem related to smoothing tweens at all (i.e. deleting nodes/edges during these don't cause an issue)
 - make fancy smooth mode optional
 - ID packing (i.e. nodes and edges should have no missing ids after serialisation)

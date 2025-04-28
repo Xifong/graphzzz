@@ -1,9 +1,10 @@
 import { Scene } from 'phaser';
 import { getPhaserPositionOf } from '../util/positions';
-import { GRAPH_GRAPHICS_STYLE, NODE_RADIUS, NODE_DEPTH } from '../scenes/vars';
+import { GRAPH_GRAPHICS_STYLE, NODE_RADIUS, NODE_DEPTH, TEXT_STYLE } from '../scenes/vars';
 import { NodeEntityPositionerImp } from './NodeEntityPositioner';
 import { getNode, getNodePositioner } from '../util/graphData';
 import { SimPosition } from '../types';
+import { DEBUG_TEXT } from '../vars';
 
 export const NodeEvents = {
     REQUEST_DELETE: 'request-delete',
@@ -18,6 +19,7 @@ export class NodeObject extends Phaser.GameObjects.Container {
     private shiftKey: Phaser.Input.Keyboard.Key | null = null;
     private nodeBody: Phaser.Geom.Circle;
     private positioner: NodeEntityPositionerImp;
+    private text: Phaser.GameObjects.Text;
 
     constructor(
         public scene: Scene,
@@ -38,7 +40,6 @@ export class NodeObject extends Phaser.GameObjects.Container {
 
         this.graphics = this.scene.add.graphics(GRAPH_GRAPHICS_STYLE);
         this.add(this.graphics);
-
 
         this.nodeBody = this.drawNode();
 
@@ -95,6 +96,13 @@ export class NodeObject extends Phaser.GameObjects.Container {
     }
 
     private drawNode(): Phaser.Geom.Circle {
+        if (DEBUG_TEXT) {
+            this.text = this.scene.add.text(0, 0, `id: ${this.id}`);
+            this.text.setStyle(TEXT_STYLE);
+            this.add(this.text);
+
+        }
+
         this.graphics.clear();
         this.setDepth(NODE_DEPTH);
 

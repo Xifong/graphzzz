@@ -55,6 +55,11 @@ export class InteractiveGraphImp implements InteractiveGraph, GraphEventEmitter 
     }
 
     connectNodeTo(fromID: number, toID: number) {
+        if (fromID === toID) {
+            // Don't allow reflexive edges in interactive graphs
+            return;
+        }
+
         this.graph.upsertEdge(this.nextEdgeID, fromID, toID);
 
         this.emitEvent({
@@ -66,7 +71,7 @@ export class InteractiveGraphImp implements InteractiveGraph, GraphEventEmitter 
     }
 
     deleteEdge(id: number): boolean {
-        const wasDeleted = this.graph.deleteIfExistsEdge(id);
+        const wasDeleted = this.graph.deleteIfExistsEdgeID(id);
         if (wasDeleted) {
             this.emitEvent({
                 type: "EDGE_DELETED",

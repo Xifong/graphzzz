@@ -70,9 +70,12 @@ export class GraphImp implements Graph {
 
     // nodes may optionally already exist
     upsertEdge(id: number, leftNodeID: number, rightNodeID: number): GraphEdge {
-        // must delete first to clean up references to the old edge, if the upserted edge
-        // is to safely replace an old edge with the same id but different nodes
-        this.deleteIfExistsEdge(id);
+        if (this.edges.has(id)) {
+            throw new GraphManipulationError("cannot upsert edge with id used previously");
+        }
+
+        // must delete first to clean up references to the old edge
+        this.deleteIfExistsEdgeBetween(leftNodeID, rightNodeID);
 
         const leftNode = this.upsertNode(leftNodeID);
         const rightNode = this.upsertNode(rightNodeID);
@@ -102,14 +105,28 @@ export class GraphImp implements Graph {
         // Iterate over a copy in case deleteIfExistsEdge modifies the original
         const edgesToDelete = [...node.edges];
         for (const edge of edgesToDelete) {
-            this.deleteIfExistsEdge(edge.id);
+            this.deleteIfExistsEdgeID(edge.id);
         }
 
         this.nodes.delete(id);
         return true;
     }
 
-    deleteIfExistsEdge(id: number): boolean {
+    deleteIfExistsEdgeBetween(fromNodeID: number, toNodeID: number) {
+        if (!this.nodes.has(fromNodeID) || !this.nodes.has(toNodeID)) {
+            return;
+        }
+
+        const edge = this.connectionBetween(fromNodeID, toNodeID);
+
+        if (edge === null) {
+            return;
+        }
+
+        this.deleteIfExistsEdgeID(edge.id);
+    }
+
+    deleteIfExistsEdgeID(id: number): boolean {
         const edge = this.edges.get(id);
 
         if (edge === undefined) {

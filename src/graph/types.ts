@@ -38,7 +38,7 @@ export interface Graph {
     upsertNode: (nodeID: number, edgeIDs?: number[]) => GraphNode;
     upsertEdge: (edgeID: number, leftNodeID: number, rightNodeID: number) => GraphEdge;
     deleteIfExistsNode: (nodeID: number) => boolean;
-    deleteIfExistsEdge: (edgeID: number) => boolean;
+    deleteIfExistsEdgeID: (edgeID: number) => boolean;
 
     neighboursOf: (nodeID: number) => GraphNode[];
     connectionBetween: (nodeID: number, otherNodeID: number) => GraphEdge | null;
